@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MentalPsique — Citas</title>
+  <link rel="stylesheet" href="../css/global.css">
+</head>
+<body>
+<script src="../js/api.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+Auth.requireAuth();
+const main = renderLayout('Citas');
+const user = Auth.getUser();
+
+let citasList = [];
+let psicologosList = [];
+let pacientesList = [];
+
+async function loadCitas() {
+  main.innerHTML = `
+    <div class="page-header">
+      <div><h2>Citas</h2><p>Gestiona las citas médicas</p></div>
+      ${user.rol !== 'psicologo' ? '<button class="btn btn--primary" onclick="abrirModal()">+ Nueva cita</button>' : ''}
+    </div>
+
+    <div style="display:flex;gap:.75rem;margin-bottom:1.25rem;flex-wrap:wrap">
+      <select id="filtro-estado"
+        style="padding:.5rem .75rem;border:1px solid var(--clr-border);
+               border-radius:var(--radius-sm);font-size:.85rem;background:var(--clr-surface)">
+        <option value="">Todos los estados</option>
+        <option value="pendiente">Pendiente</option>
+        <option value="confirmada">Confirmada</option>
+        <option value="completada">Completada</option>
+        <option value="cancelada">Cancelada</option>
+        <option value="no_asistio">No asistió</option>
+      </select>
+    </div>
+
+    <div class="table-wrap" id="tabla-citas">${UI.spinner()}</div>
+
+    <!-- Modal Nueva Cita -->
+    <div class="modal-overlay" id="modal-cita">
+      <div class="modal">
+        <div class="modal__header">
+          <h3 class="modal__title">Nueva cita</h3>
+          <button class="modal__close" onclick="cerrarModal('modal-cita')">✕</button>
+        </div>
+        <div class="form-grid">
+          ${user.rol==='admin' ? `
+          <div class="form-group">
+            <label>Paciente</label>
+            <select id="c-paciente"></select>
+          </div>` : ''}
+          <div class="form-group">
+            <label>Psicólogo</label>
+            <select id="c-psicologo"></select>
+          </div>
+          <div class="form-group">
+            <label>Fecha y hora</label>
+            <input type="datetime-local" id="c-fecha">
+          </div>
+          <div class="form-group">
+            <label>Modalidad</label>
+            <select id="c-modalidad">
+              <option value="presencial">Presencial</option>
+              <option value="videollamada">Videollamada</option>
+              <option value="telefonica">Telefónica</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Notas previas</label>
+            <textarea id="c-notas" placeholder="Opcional..."></textarea>
+          </div>
+        </div>
+        <div class="modal__footer">
+          <button class="btn btn--outline" onclick="cerrarModal('modal-cita')">Cancelar</button>
+          <button class="btn btn--primary" onclick="crearCita()">Guardar cita</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Editar Cita -->
+    <div class="modal-overlay" id="modal-editar-cita">
+      <div class="modal">
+        <div class="modal__header">
+          <h3 class="modal__title" id="editar-cita-titulo">Editar cita</h3>
+          <button class="modal__close" onclick="cerrarModal('modal-editar-cita')">✕</button>
+        </div>
+        <input type="hidden" id="edit-cita-id">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Fecha y hora</label>
+            <input type="datetime-local" id="edit-fecha">
+          </div>
+          <div class="form-group">
+            <label>Modalidad</label>
+            <select id="edit-modalidad">
+              <option value="presencial">Presencial</option>
+              <option value="videollamada">Videollamada</option>
+              <option value="telefonica">Telefónica</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Notas previas</label>
+            <textarea id="edit-notas" placeholder="Opcional..."></textarea>
+          </div>
+          <span class="form-error" id="edit-cita-error"></span>
+        </div>
+        <div class="modal__footer">
+          <button class="btn btn--outline" onclick="cerrarModal('modal-editar-cita')">Cancelar</button>
+          <button class="btn btn--primary" id="btn-guardar-edit-cita"
+                  onclick="guardarEdicionCita()">Guardar cambios</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Cambiar Estado -->
+    <div class="modal-overlay" id="modal-estado">
+      <div class="modal">
+        <div class="modal__header">
+          <h3 class="modal__title">Cambiar estado</h3>
+          <button class="modal__close" onclick="cerrarModal('modal-estado')">✕</button>
+        </div>
+        <div class="form-grid">
+          <input type="hidden" id="estado-cita-id">
+          <div class="form-group">
+            <label>Nuevo estado</label>
+            <select id="nuevo-estado">
+              <option value="pendiente">Pendiente</option>
+              <option value="confirmada">Confirmada</option>
+              <option value="completada">Completada</option>
+              <option value="no_asistio">No asistió</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal__footer">
+          <button class="btn btn--outline" onclick="cerrarModal('modal-estado')">Cancelar</button>
+          <button class="btn btn--primary" onclick="guardarEstado()">Actualizar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Confirmar eliminar -->
+    <div class="modal-overlay" id="modal-confirmar-cita">
+      <div class="modal" style="max-width:420px">
+        <div class="modal__header">
+          <h3 class="modal__title">Eliminar cita</h3>
+          <button class="modal__close" onclick="cerrarModal('modal-confirmar-cita')">✕</button>
+        </div>
+        <p style="font-size:.9rem;color:var(--clr-muted);margin:.5rem 0 1rem">
+          ⚠ Esta acción es irreversible. Si la cita tiene una sesión registrada no podrá eliminarse.
+        </p>
+        <input type="hidden" id="eliminar-cita-id">
+        <div class="modal__footer">
+          <button class="btn btn--outline" onclick="cerrarModal('modal-confirmar-cita')">Cancelar</button>
+          <button class="btn btn--danger" onclick="ejecutarEliminarCita()">🗑 Eliminar</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('filtro-estado').addEventListener('change', filtrarCitas);
+
+  try {
+    citasList = await API.citas.listar();
+    if (user.rol !== 'psicologo') psicologosList = await API.psicologos.listar();
+    if (user.rol === 'admin')     pacientesList  = await API.pacientes.listar();
+    renderTabla(citasList);
+  } catch (err) { Toast.error(err.message); }
+}
+
+function filtrarCitas() {
+  const estado = document.getElementById('filtro-estado').value;
+  renderTabla(estado ? citasList.filter(c => c.estado === estado) : citasList);
+}
+
+function renderTabla(citas) {
+  if (!citas.length) {
+    document.getElementById('tabla-citas').innerHTML = UI.emptyState('No hay citas registradas');
+    return;
+  }
+  const filas = citas.map(c => `
+    <tr>
+      <td><strong>${UI.fecha(c.fecha_hora)}</strong></td>
+      <td>${c.nombre_paciente||'—'} ${c.apellido_paciente||''}</td>
+      <td>${c.nombre_psicologo||'—'} ${c.apellido_psicologo||''}</td>
+      <td style="text-transform:capitalize">${c.modalidad}</td>
+      <td>${UI.badge(c.estado)}</td>
+      <td>
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+          ${(user.rol==='psicologo'||user.rol==='admin') && !['cancelada','completada'].includes(c.estado) ? `
+            <button class="btn btn--outline btn--sm"
+                    onclick="abrirEditarCita(${c.id_cita},'${c.fecha_hora}','${c.modalidad}','${c.notas_previas||''}')">
+              ✏ Editar
+            </button>
+            <button class="btn btn--outline btn--sm"
+                    onclick="abrirCambiarEstado(${c.id_cita},'${c.estado}')">
+              Estado
+            </button>` : ''}
+          ${['pendiente','confirmada'].includes(c.estado) ? `
+            <button class="btn btn--sm" style="background:#F59E0B;color:#fff"
+                    onclick="cancelarCita(${c.id_cita})">
+              ⏸ Cancelar
+            </button>` : ''}
+          ${user.rol==='admin' ? `
+            <button class="btn btn--danger btn--sm"
+                    onclick="confirmarEliminarCita(${c.id_cita})">
+              🗑
+            </button>` : ''}
+        </div>
+      </td>
+    </tr>`).join('');
+
+  document.getElementById('tabla-citas').innerHTML = `
+    <div class="table-header">
+      <h3>Total: ${citas.length} cita(s)</h3>
+    </div>
+    <table>
+      <thead><tr>
+        <th>Fecha y hora</th><th>Paciente</th><th>Psicólogo</th>
+        <th>Modalidad</th><th>Estado</th><th>Acciones</th>
+      </tr></thead>
+      <tbody>${filas}</tbody>
+    </table>`;
+}
+
+// ── Nueva cita ───────────────────────────────────────────────
+
+async function abrirModal() {
+  const selPs = document.getElementById('c-psicologo');
+  selPs.innerHTML = psicologosList.map(p =>
+    `<option value="${p.id_psicologo}">${p.nombre} ${p.apellido} — ${p.especialidad}</option>`
+  ).join('');
+  if (user.rol === 'admin') {
+    const selPa = document.getElementById('c-paciente');
+    selPa.innerHTML = pacientesList.map(p =>
+      `<option value="${p.id_paciente}">${p.nombre} ${p.apellido}</option>`
+    ).join('');
+  }
+  document.getElementById('modal-cita').classList.add('open');
+}
+
+async function crearCita() {
+  try {
+    let id_paciente;
+    if (user.rol === 'paciente') {
+      const perfil = await API.pacientes.miPerfil();
+      id_paciente = perfil.id_paciente;
+    } else {
+      id_paciente = parseInt(document.getElementById('c-paciente').value);
+    }
+    const body = {
+      id_paciente,
+      id_psicologo: parseInt(document.getElementById('c-psicologo').value),
+      fecha_hora:   document.getElementById('c-fecha').value,
+      modalidad:    document.getElementById('c-modalidad').value,
+      notas_previas:document.getElementById('c-notas').value || null,
+    };
+    await API.citas.crear(body);
+    cerrarModal('modal-cita');
+    Toast.success('Cita creada correctamente');
+    citasList = await API.citas.listar();
+    renderTabla(citasList);
+  } catch(err) { Toast.error(err.message); }
+}
+
+// ── Editar cita ──────────────────────────────────────────────
+
+function abrirEditarCita(id, fecha_hora, modalidad, notas) {
+  document.getElementById('edit-cita-id').value    = id;
+  document.getElementById('edit-modalidad').value  = modalidad;
+  document.getElementById('edit-notas').value      = notas !== 'null' ? notas : '';
+  document.getElementById('edit-cita-error').textContent = '';
+
+  // Formatear fecha para datetime-local
+  if (fecha_hora) {
+    const d = new Date(fecha_hora);
+    const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+      .toISOString().slice(0, 16);
+    document.getElementById('edit-fecha').value = local;
+  }
+
+  document.getElementById('editar-cita-titulo').textContent = `Editar cita #${id}`;
+  document.getElementById('modal-editar-cita').classList.add('open');
+}
+
+async function guardarEdicionCita() {
+  const err = document.getElementById('edit-cita-error');
+  const btn = document.getElementById('btn-guardar-edit-cita');
+  err.textContent = '';
+
+  const id        = document.getElementById('edit-cita-id').value;
+  const fecha     = document.getElementById('edit-fecha').value;
+  const modalidad = document.getElementById('edit-modalidad').value;
+  const notas     = document.getElementById('edit-notas').value;
+
+  if (!fecha) { err.textContent = 'La fecha es obligatoria'; return; }
+
+  btn.disabled    = true;
+  btn.textContent = 'Guardando...';
+
+  try {
+    await API.citas.editar(id, {
+      fecha_hora:    fecha,
+      modalidad,
+      notas_previas: notas || null,
+    });
+    cerrarModal('modal-editar-cita');
+    Toast.success('Cita actualizada correctamente');
+    citasList = await API.citas.listar();
+    renderTabla(citasList);
+  } catch(e) {
+    err.textContent = e.message;
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = 'Guardar cambios';
+  }
+}
+
+// ── Cambiar estado ───────────────────────────────────────────
+
+function abrirCambiarEstado(id, estadoActual) {
+  document.getElementById('estado-cita-id').value = id;
+  document.getElementById('nuevo-estado').value   = estadoActual;
+  document.getElementById('modal-estado').classList.add('open');
+}
+
+async function guardarEstado() {
+  const id     = document.getElementById('estado-cita-id').value;
+  const estado = document.getElementById('nuevo-estado').value;
+  try {
+    await API.citas.cambiarEstado(id, estado);
+    cerrarModal('modal-estado');
+    Toast.success('Estado actualizado');
+    citasList = await API.citas.listar();
+    renderTabla(citasList);
+  } catch(err) { Toast.error(err.message); }
+}
+
+// ── Cancelar ─────────────────────────────────────────────────
+
+async function cancelarCita(id) {
+  if (!confirm('¿Seguro que quieres cancelar esta cita?')) return;
+  try {
+    await API.citas.cancelar(id);
+    Toast.success('Cita cancelada');
+    citasList = await API.citas.listar();
+    renderTabla(citasList);
+  } catch(err) { Toast.error(err.message); }
+}
+
+// ── Eliminar ─────────────────────────────────────────────────
+
+function confirmarEliminarCita(id) {
+  document.getElementById('eliminar-cita-id').value = id;
+  document.getElementById('modal-confirmar-cita').classList.add('open');
+}
+
+async function ejecutarEliminarCita() {
+  const id = document.getElementById('eliminar-cita-id').value;
+  try {
+    await API.citas.eliminar(id);
+    cerrarModal('modal-confirmar-cita');
+    Toast.success('Cita eliminada correctamente');
+    citasList = await API.citas.listar();
+    renderTabla(citasList);
+  } catch(err) {
+    cerrarModal('modal-confirmar-cita');
+    Toast.error(err.message);
+  }
+}
+
+function cerrarModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+loadCitas();
+</script>
+</body>
+</html>

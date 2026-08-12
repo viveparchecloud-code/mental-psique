@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MentalPsique — Mi Perfil</title>
+  <link rel="stylesheet" href="../css/global.css">
+</head>
+<body>
+<script src="../js/api.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+Auth.requireAuth();
+const main = renderLayout('Mi perfil');
+const user = Auth.getUser();
+
+async function load() {
+  main.innerHTML = `
+    <div class="page-header">
+      <div><h2>Mi perfil</h2><p>Información personal y estado de cuenta</p></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;max-width:900px" id="content">
+      ${UI.spinner()}
+    </div>
+  `;
+
+  try {
+    const perfil = await API.pacientes.miPerfil();
+    const consent = await API.consentimientos.obtener(perfil.id_paciente).catch(() => ({ aceptado: false }));
+
+    document.getElementById('content').innerHTML = `
+      <!-- Card datos personales -->
+      <div class="form-card" style="max-width:100%">
+        <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;padding-bottom:1.25rem;border-bottom:1px solid var(--clr-border)">
+          <div class="navbar__avatar" style="width:52px;height:52px;font-size:1.2rem;flex-shrink:0">
+            ${(user.nombre?.[0]||'P').toUpperCase()}
+          </div>
+          <div>
+            <h3 style="font-family:var(--font-display);font-size:1.3rem;font-weight:400">${user.nombre} ${user.apellido}</h3>
+            <p style="font-size:.82rem;margin:0">${user.email}</p>
+          </div>
+        </div>
+        <form id="form-perfil" class="form-grid">
+          <div class="form-grid form-grid--2">
+            <div class="form-group">
+              <label>Teléfono</label>
+              <input type="text" id="p-telefono" value="${perfil.telefono||''}">
+            </div>
+            <div class="form-group">
+              <label>Ciudad</label>
+              <input type="text" id="p-ciudad" value="${perfil.ciudad||''}">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Dirección</label>
+            <input type="text" id="p-direccion" value="${perfil.direccion||''}">
+          </div>
+          <div class="form-group">
+            <label>EPS</label>
+            <input type="text" id="p-eps" value="${perfil.eps||''}">
+          </div>
+          <button type="submit" class="btn btn--primary" style="width:fit-content">Guardar cambios</button>
+        </form>
+      </div>
+
+      <!-- Card consentimiento -->
+      <div class="form-card" style="max-width:100%">
+        <h3 style="font-family:var(--font-display);font-size:1.2rem;font-weight:400;margin-bottom:1rem">
+          Consentimiento informado
+        </h3>
+        ${consent.aceptado ? `
+          <div style="background:var(--clr-success-lt);border-radius:var(--radius-md);padding:1.25rem;margin-bottom:1rem">
+            <div style="font-weight:500;color:var(--clr-success);margin-bottom:.25rem">✓ Consentimiento firmado</div>
+            <p style="font-size:.82rem;color:var(--clr-success);margin:0">
+              Firmado el ${UI.fechaCorta(consent.fecha_firma)}
+            </p>
+          </div>` : `
+          <div style="background:var(--clr-warn-lt);border-radius:var(--radius-md);padding:1.25rem;margin-bottom:1rem">
+            <div style="font-weight:500;color:var(--clr-warn);margin-bottom:.25rem">⚠ Pendiente de firma</div>
+            <p style="font-size:.82rem;color:var(--clr-warn);margin:0">
+              Debes firmar el consentimiento informado para acceder a todos los servicios.
+            </p>
+          </div>`}
+        <div style="background:var(--clr-bg);border-radius:var(--radius-sm);padding:1rem;font-size:.82rem;
+             color:var(--clr-muted);line-height:1.7;max-height:200px;overflow-y:auto;margin-bottom:1rem">
+          ${(consent.contenido || consent.texto || '').replace(/\n/g,'<br>')}
+        </div>
+        ${!consent.aceptado ? `
+          <button class="btn btn--primary" onclick="firmarConsentimiento(${perfil.id_paciente})" id="btn-firmar">
+            Firmar consentimiento
+          </button>` : ''}
+      </div>
+    `;
+
+    document.getElementById('form-perfil').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        await API.pacientes.actualizar(perfil.id_paciente, {
+          telefono:  document.getElementById('p-telefono').value,
+          ciudad:    document.getElementById('p-ciudad').value,
+          direccion: document.getElementById('p-direccion').value,
+          eps:       document.getElementById('p-eps').value,
+        });
+        Toast.success('Perfil actualizado');
+      } catch(err) { Toast.error(err.message); }
+    });
+
+  } catch(err) { Toast.error(err.message); }
+}
+
+async function firmarConsentimiento(id_paciente) {
+  const btn = document.getElementById('btn-firmar');
+  btn.disabled = true;
+  btn.textContent = 'Firmando...';
+  try {
+    await API.consentimientos.firmar(id_paciente);
+    Toast.success('Consentimiento firmado correctamente');
+    setTimeout(() => load(), 800);
+  } catch(err) {
+    Toast.error(err.message);
+    btn.disabled = false;
+    btn.textContent = 'Firmar consentimiento';
+  }
+}
+
+load();
+</script>
+</body>
+</html>

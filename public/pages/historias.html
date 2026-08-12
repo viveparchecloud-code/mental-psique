@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MentalPsique — Historias Clínicas</title>
+  <link rel="stylesheet" href="../css/global.css">
+</head>
+<body>
+<script src="../js/api.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+Auth.requireAuth();
+const main = renderLayout('Historias clínicas');
+const user = Auth.getUser();
+if (user.rol === 'paciente') window.location.href = 'dashboard.html';
+
+let pacientesList = [];
+
+async function load() {
+  main.innerHTML = `
+    <div class="page-header">
+      <div><h2>Historias clínicas</h2><p>Registros de atención psicológica</p></div>
+      <button class="btn btn--primary" onclick="abrirCrear()">+ Nueva historia</button>
+    </div>
+    <div class="table-wrap" id="tabla">${UI.spinner()}</div>
+    ${modalCrear()}
+    ${modalSesiones()}
+    ${modalNuevaSesion()}
+  `;
+
+  try {
+    pacientesList = await API.pacientes.listar();
+    renderPacientesTabla(pacientesList);
+  } catch(err) { Toast.error(err.message); }
+}
+
+function renderPacientesTabla(data) {
+  if (!data.length) {
+    document.getElementById('tabla').innerHTML = UI.emptyState('No hay pacientes');
+    return;
+  }
+  document.getElementById('tabla').innerHTML = `
+    <div class="table-header"><h3>Pacientes</h3></div>
+    <table>
+      <thead><tr><th>Paciente</th><th>Email</th><th>Ciudad</th><th>Acciones</th></tr></thead>
+      <tbody>
+        ${data.map(p => `
+          <tr>
+            <td><strong>${p.nombre} ${p.apellido}</strong></td>
+            <td style="color:var(--clr-muted)">${p.email}</td>
+            <td>${p.ciudad||'—'}</td>
+            <td>
+              <div style="display:flex;gap:.4rem">
+                <button class="btn btn--outline btn--sm" onclick="verHistoria(${p.id_paciente},'${p.nombre} ${p.apellido}')">Ver historia</button>
+                <button class="btn btn--primary btn--sm" onclick="abrirSesiones(${p.id_paciente},'${p.nombre} ${p.apellido}')">Sesiones</button>
+              </div>
+            </td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+function modalCrear() {
+  return `
+  <div class="modal-overlay" id="modal-crear">
+    <div class="modal" style="max-width:560px">
+      <div class="modal__header">
+        <h3 class="modal__title">Nueva historia clínica</h3>
+        <button class="modal__close" onclick="cerrarModal('modal-crear')">✕</button>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Paciente</label>
+          <select id="h-paciente"></select>
+        </div>
+        <div class="form-group">
+          <label>Motivo de consulta</label>
+          <textarea id="h-motivo" rows="3" placeholder="Describe el motivo principal de consulta…"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Antecedentes</label>
+          <textarea id="h-antecedentes" rows="2" placeholder="Antecedentes relevantes (opcional)…"></textarea>
+        </div>
+        <div class="form-grid form-grid--2">
+          <div class="form-group">
+            <label>Código CIE-10</label>
+            <input type="text" id="h-cie" placeholder="Ej: F41.1">
+          </div>
+          <div class="form-group">
+            <label>Diagnóstico</label>
+            <input type="text" id="h-diagnostico" placeholder="Descripción diagnóstica">
+          </div>
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--outline" onclick="cerrarModal('modal-crear')">Cancelar</button>
+        <button class="btn btn--primary" onclick="crearHistoria()">Guardar</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function modalSesiones() {
+  return `
+  <div class="modal-overlay" id="modal-sesiones">
+    <div class="modal" style="max-width:680px">
+      <div class="modal__header">
+        <div>
+          <h3 class="modal__title" id="sesiones-titulo">Sesiones</h3>
+          <p id="sesiones-subtitulo" style="font-size:.82rem;color:var(--clr-muted);margin-top:.2rem"></p>
+        </div>
+        <button class="modal__close" onclick="cerrarModal('modal-sesiones')">✕</button>
+      </div>
+      <div id="sesiones-content">${UI.spinner()}</div>
+      <div class="modal__footer">
+        <button class="btn btn--outline" onclick="cerrarModal('modal-sesiones')">Cerrar</button>
+        <button class="btn btn--primary" onclick="abrirNuevaSesion()">+ Nueva sesión</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function modalNuevaSesion() {
+  return `
+  <div class="modal-overlay" id="modal-nueva-sesion">
+    <div class="modal" style="max-width:560px">
+      <div class="modal__header">
+        <h3 class="modal__title">Registrar sesión</h3>
+        <button class="modal__close" onclick="cerrarModal('modal-nueva-sesion')">✕</button>
+      </div>
+      <input type="hidden" id="ns-historia-id">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Cita vinculada (ID)</label>
+          <input type="number" id="ns-cita-id" placeholder="ID de la cita completada">
+        </div>
+        <div class="form-group">
+          <label>Fecha de sesión</label>
+          <input type="date" id="ns-fecha">
+        </div>
+        <div class="form-group">
+          <label>Evolución / Nota clínica</label>
+          <textarea id="ns-evolucion" rows="4" placeholder="Describe la evolución del paciente en esta sesión…"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Plan de tratamiento</label>
+          <textarea id="ns-plan" rows="2" placeholder="Acciones y objetivos para próximas sesiones…"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Observaciones adicionales</label>
+          <textarea id="ns-obs" rows="2" placeholder="Opcional…"></textarea>
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--outline" onclick="cerrarModal('modal-nueva-sesion')">Cancelar</button>
+        <button class="btn btn--primary" onclick="guardarSesion()">Guardar sesión</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+let historiaActivaId = null;
+
+async function verHistoria(id_paciente, nombre) {
+  // Reutiliza modal de sesiones como visor de historia
+  document.getElementById('modal-sesiones').classList.add('open');
+  document.getElementById('sesiones-titulo').textContent = 'Historia clínica';
+  document.getElementById('sesiones-subtitulo').textContent = nombre;
+  document.getElementById('sesiones-content').innerHTML = UI.spinner();
+  try {
+    const h = await API.historias.obtener(id_paciente);
+    historiaActivaId = h.id_historia;
+    document.getElementById('sesiones-content').innerHTML = `
+      <div style="display:grid;gap:1rem">
+        <div style="display:flex;gap:1.5rem;flex-wrap:wrap;padding-bottom:1rem;border-bottom:1px solid var(--clr-border)">
+          <div><span style="font-size:.75rem;color:var(--clr-muted);text-transform:uppercase;letter-spacing:.06em">Estado</span>
+            <div style="margin-top:.3rem">${UI.badge(h.estado)}</div></div>
+          <div><span style="font-size:.75rem;color:var(--clr-muted);text-transform:uppercase;letter-spacing:.06em">Apertura</span>
+            <div style="margin-top:.3rem;font-size:.9rem">${UI.fechaCorta(h.fecha_apertura)}</div></div>
+          <div><span style="font-size:.75rem;color:var(--clr-muted);text-transform:uppercase;letter-spacing:.06em">CIE-10</span>
+            <div style="margin-top:.3rem;font-size:.9rem">${h.diagnostico_cie||'—'}</div></div>
+        </div>
+        <div><strong style="font-size:.82rem">Motivo de consulta</strong>
+          <p style="margin-top:.4rem;font-size:.9rem;color:var(--clr-text)">${h.motivo_consulta}</p></div>
+        ${h.diagnostico_desc?`<div><strong style="font-size:.82rem">Diagnóstico</strong>
+          <p style="margin-top:.4rem;font-size:.9rem;color:var(--clr-text)">${h.diagnostico_desc}</p></div>`:''}
+        ${h.antecedentes?`<div><strong style="font-size:.82rem">Antecedentes</strong>
+          <p style="margin-top:.4rem;font-size:.9rem;color:var(--clr-text)">${h.antecedentes}</p></div>`:''}
+      </div>`;
+  } catch {
+    document.getElementById('sesiones-content').innerHTML = UI.emptyState('Sin historia clínica');
+  }
+}
+
+async function abrirSesiones(id_paciente, nombre) {
+  document.getElementById('modal-sesiones').classList.add('open');
+  document.getElementById('sesiones-titulo').textContent = 'Sesiones clínicas';
+  document.getElementById('sesiones-subtitulo').textContent = nombre;
+  document.getElementById('sesiones-content').innerHTML = UI.spinner();
+  try {
+    const h = await API.historias.obtener(id_paciente);
+    historiaActivaId = h.id_historia;
+    const sesiones = await API.sesiones.listar(h.id_historia);
+    if (!sesiones.length) {
+      document.getElementById('sesiones-content').innerHTML = UI.emptyState('Sin sesiones registradas');
+      return;
+    }
+    document.getElementById('sesiones-content').innerHTML = `
+      <div style="display:grid;gap:1rem;max-height:400px;overflow-y:auto;padding-right:.5rem">
+        ${sesiones.map(s => `
+          <div style="background:var(--clr-bg);border:1px solid var(--clr-border);border-radius:var(--radius-md);padding:1rem">
+            <div style="display:flex;justify-content:space-between;margin-bottom:.75rem">
+              <strong style="font-size:.9rem">${UI.fechaCorta(s.fecha)}</strong>
+              <span style="font-size:.75rem;color:var(--clr-muted)">Sesión #${s.id_sesion}</span>
+            </div>
+            <p style="font-size:.88rem;color:var(--clr-text);margin-bottom:.5rem">${s.evolucion}</p>
+            ${s.plan_tratamiento?`<p style="font-size:.82rem;color:var(--clr-muted)"><strong>Plan:</strong> ${s.plan_tratamiento}</p>`:''}
+          </div>`).join('')}
+      </div>`;
+  } catch {
+    document.getElementById('sesiones-content').innerHTML = UI.emptyState('Sin historia clínica — crea una primero');
+  }
+}
+
+function abrirCrear() {
+  const sel = document.getElementById('h-paciente');
+  sel.innerHTML = pacientesList.map(p =>
+    `<option value="${p.id_paciente}">${p.nombre} ${p.apellido}</option>`).join('');
+  document.getElementById('modal-crear').classList.add('open');
+}
+
+async function crearHistoria() {
+  const body = {
+    id_paciente:    parseInt(document.getElementById('h-paciente').value),
+    motivo_consulta:document.getElementById('h-motivo').value,
+    antecedentes:   document.getElementById('h-antecedentes').value || null,
+    diagnostico_cie:document.getElementById('h-cie').value || null,
+    diagnostico_desc:document.getElementById('h-diagnostico').value || null,
+  };
+  try {
+    await API.historias.crear(body);
+    cerrarModal('modal-crear');
+    Toast.success('Historia clínica creada');
+  } catch(err) { Toast.error(err.message); }
+}
+
+function abrirNuevaSesion() {
+  document.getElementById('ns-historia-id').value = historiaActivaId;
+  document.getElementById('ns-fecha').value = new Date().toISOString().split('T')[0];
+  document.getElementById('modal-nueva-sesion').classList.add('open');
+}
+
+async function guardarSesion() {
+  const body = {
+    id_historia:    parseInt(document.getElementById('ns-historia-id').value),
+    id_cita:        parseInt(document.getElementById('ns-cita-id').value),
+    fecha:          document.getElementById('ns-fecha').value,
+    evolucion:      document.getElementById('ns-evolucion').value,
+    plan_tratamiento:document.getElementById('ns-plan').value || null,
+    observaciones:  document.getElementById('ns-obs').value || null,
+  };
+  try {
+    await API.sesiones.crear(body);
+    cerrarModal('modal-nueva-sesion');
+    Toast.success('Sesión registrada');
+  } catch(err) { Toast.error(err.message); }
+}
+
+function cerrarModal(id) { document.getElementById(id).classList.remove('open'); }
+
+load();
+</script>
+</body>
+</html>

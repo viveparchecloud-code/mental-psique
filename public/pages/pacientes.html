@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MentalPsique — Demo navegable</title>
+  <style>
+  :root{
+    --clr-bg:#F4F7FB; --clr-surface:#FFFFFF; --clr-border:#D7E2EE;
+    --clr-text:#213A52; --clr-muted:#647D95;
+    --clr-navy:#1E3A5F; --clr-blue:#4A7BA6; --clr-blue-lt:#E8F0F8;
+    --clr-accent:#2C74B2; --clr-accent-dk:#235C8F;
+    --clr-indigo:#3E66A8; --clr-indigo-lt:#EAF0FA;
+    --clr-danger:#C0453A; --clr-danger-lt:#FBEAE8;
+    --clr-warn:#B7770D; --clr-warn-lt:#FDF3E0;
+    --clr-success:#2E7D52; --clr-success-lt:#E8F5EE;
+    --font-display:'Cormorant Garamond',Georgia,serif;
+    --font-body:'DM Sans',system-ui,sans-serif;
+    --radius-sm:6px; --radius-md:12px; --radius-lg:20px;
+    --shadow-sm:0 1px 3px rgba(30,58,95,.06);
+    --shadow-md:0 4px 16px rgba(30,58,95,.10);
+    --shadow-lg:0 12px 40px rgba(30,58,95,.16);
+    --nav-h:64px; --sidebar-w:240px;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  html{font-size:16px;}
+  body{font-family:var(--font-body);background:var(--clr-bg);color:var(--clr-text);line-height:1.6;min-height:100vh;}
+  a{color:inherit;text-decoration:none;} button{font-family:inherit;cursor:pointer;border:none;background:none;}
+  input,textarea,select{font-family:inherit;}
+  h1,h2,h3{font-family:var(--font-display);font-weight:400;line-height:1.2;color:var(--clr-navy);}
+  h2{font-size:clamp(1.5rem,3vw,2.2rem);} h3{font-size:1.3rem;}
+  p{color:var(--clr-muted);font-size:.95rem;}
+  .app-shell{display:grid;grid-template-columns:var(--sidebar-w) 1fr;grid-template-rows:var(--nav-h) 1fr;min-height:100vh;}
+  .main-content{grid-column:2;grid-row:2;padding:2rem 2.5rem;overflow-y:auto;}
+  .navbar{grid-column:1/-1;height:var(--nav-h);background:var(--clr-surface);border-bottom:1px solid var(--clr-border);display:flex;align-items:center;padding:0 2rem;gap:1rem;position:sticky;top:0;z-index:100;}
+  .navbar__logo{font-family:var(--font-display);font-size:1.5rem;font-weight:600;color:var(--clr-navy);letter-spacing:-.02em;flex:1;}
+  .navbar__logo span{color:var(--clr-blue);font-style:italic;}
+  .navbar__user{display:flex;align-items:center;gap:.75rem;font-size:.85rem;color:var(--clr-muted);}
+  .navbar__avatar{width:34px;height:34px;border-radius:50%;background:var(--clr-blue-lt);border:2px solid var(--clr-blue);display:flex;align-items:center;justify-content:center;font-weight:500;color:var(--clr-navy);font-size:.8rem;}
+  .navbar__logout{padding:.35rem .9rem;border-radius:var(--radius-sm);border:1px solid var(--clr-border);font-size:.8rem;color:var(--clr-muted);transition:all .2s;}
+  .navbar__logout:hover{border-color:var(--clr-danger);color:var(--clr-danger);}
+  .sidebar{grid-row:2;background:var(--clr-surface);border-right:1px solid var(--clr-border);padding:1.5rem 1rem;display:flex;flex-direction:column;gap:.25rem;position:sticky;top:var(--nav-h);height:calc(100vh - var(--nav-h));overflow-y:auto;}
+  .sidebar__section{font-size:.7rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--clr-muted);padding:1.2rem .75rem .4rem;}
+  .sidebar__link{display:flex;align-items:center;gap:.75rem;padding:.6rem .75rem;border-radius:var(--radius-sm);font-size:.88rem;color:var(--clr-muted);transition:all .15s;cursor:pointer;}
+  .sidebar__link:hover{background:var(--clr-blue-lt);color:var(--clr-navy);}
+  .sidebar__link.active{background:var(--clr-blue-lt);color:var(--clr-navy);font-weight:500;}
+  .sidebar__icon{font-size:1rem;width:20px;text-align:center;}
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.25rem;margin-bottom:2rem;}
+  .stat-card{background:var(--clr-surface);border:1px solid var(--clr-border);border-radius:var(--radius-md);padding:1.5rem;display:flex;flex-direction:column;gap:.5rem;box-shadow:var(--shadow-sm);transition:box-shadow .2s;}
+  .stat-card:hover{box-shadow:var(--shadow-md);}
+  .stat-card__icon{font-size:1.4rem;width:44px;height:44px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;margin-bottom:.25rem;}
+  .stat-card__value{font-family:var(--font-display);font-size:2rem;font-weight:300;line-height:1;color:var(--clr-navy);}
+  .stat-card__label{font-size:.8rem;color:var(--clr-muted);}
+  .stat-card--sage .stat-card__icon{background:var(--clr-blue-lt);color:var(--clr-blue);}
+  .stat-card--indigo .stat-card__icon{background:var(--clr-indigo-lt);color:var(--clr-indigo);}
+  .stat-card--warn .stat-card__icon{background:var(--clr-warn-lt);color:var(--clr-warn);}
+  .stat-card--success .stat-card__icon{background:var(--clr-success-lt);color:var(--clr-success);}
+  .table-wrap{background:var(--clr-surface);border:1px solid var(--clr-border);border-radius:var(--radius-md);overflow:hidden;box-shadow:var(--shadow-sm);}
+  .table-header{display:flex;justify-content:space-between;align-items:center;padding:1.25rem 1.5rem;border-bottom:1px solid var(--clr-border);}
+  .table-header h3{font-size:1rem;font-family:var(--font-body);font-weight:500;color:var(--clr-text);}
+  table{width:100%;border-collapse:collapse;}
+  thead th{text-align:left;font-size:.75rem;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--clr-muted);padding:.75rem 1.5rem;border-bottom:1px solid var(--clr-border);background:var(--clr-bg);}
+  tbody td{padding:1rem 1.5rem;font-size:.88rem;border-bottom:1px solid var(--clr-border);vertical-align:middle;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr{transition:background .15s;} tbody tr:hover{background:var(--clr-blue-lt);}
+  .badge{display:inline-flex;align-items:center;gap:.35rem;padding:.25rem .7rem;border-radius:99px;font-size:.75rem;font-weight:500;}
+  .badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;}
+  .badge--pendiente{background:var(--clr-warn-lt);color:var(--clr-warn);}
+  .badge--confirmada{background:var(--clr-indigo-lt);color:var(--clr-indigo);}
+  .badge--completada,.badge--activo{background:var(--clr-success-lt);color:var(--clr-success);}
+  .badge--cancelada{background:#EDEFF2;color:var(--clr-muted);}
+  .badge--no_asistio{background:var(--clr-danger-lt);color:var(--clr-danger);}
+  .badge--abierta{background:var(--clr-blue-lt);color:var(--clr-navy);}
+  .btn{display:inline-flex;align-items:center;gap:.5rem;padding:.6rem 1.25rem;border-radius:var(--radius-sm);font-size:.88rem;font-weight:500;transition:all .15s;white-space:nowrap;}
+  .btn--primary{background:var(--clr-accent);color:#fff;} .btn--primary:hover{background:var(--clr-accent-dk);}
+  .btn--outline{border:1px solid var(--clr-border);color:var(--clr-text);background:var(--clr-surface);}
+  .btn--outline:hover{border-color:var(--clr-navy);color:var(--clr-navy);}
+  .btn--danger{background:var(--clr-danger);color:#fff;} .btn--danger:hover{opacity:.88;}
+  .btn--sm{padding:.35rem .8rem;font-size:.8rem;} .btn:disabled{opacity:.45;cursor:not-allowed;}
+  .form-grid{display:grid;gap:1.25rem;} .form-grid--2{grid-template-columns:1fr 1fr;}
+  .form-group{display:flex;flex-direction:column;gap:.5rem;}
+  .form-group label{font-size:.82rem;font-weight:500;color:var(--clr-text);}
+  .form-group input,.form-group select,.form-group textarea{padding:.65rem .9rem;border:1px solid var(--clr-border);border-radius:var(--radius-sm);background:var(--clr-surface);font-size:.9rem;color:var(--clr-text);transition:border-color .15s,box-shadow .15s;outline:none;}
+  .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--clr-accent);box-shadow:0 0 0 3px rgba(44,116,178,.15);background:#fff;}
+  .form-error{font-size:.8rem;color:var(--clr-danger);margin-top:.25rem;}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(16,28,44,.45);z-index:200;align-items:center;justify-content:center;padding:1rem;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--clr-surface);border-radius:var(--radius-lg);padding:2rem;width:100%;max-width:500px;box-shadow:var(--shadow-lg);animation:modalIn .2s ease;max-height:90vh;overflow-y:auto;}
+  @keyframes modalIn{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+  .modal__header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;}
+  .modal__title{font-size:1.3rem;font-family:var(--font-display);color:var(--clr-navy);}
+  .modal__close{font-size:1.2rem;color:var(--clr-muted);line-height:1;padding:.25rem;} .modal__close:hover{color:var(--clr-text);}
+  .modal__footer{display:flex;gap:.75rem;justify-content:flex-end;margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid var(--clr-border);}
+  #toast-container{position:fixed;bottom:1.5rem;right:1.5rem;z-index:999;display:flex;flex-direction:column;gap:.6rem;}
+  .toast{display:flex;align-items:center;gap:.75rem;padding:.85rem 1.25rem;border-radius:var(--radius-md);font-size:.88rem;font-weight:500;box-shadow:var(--shadow-md);animation:toastIn .25s ease;min-width:260px;}
+  @keyframes toastIn{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:translateX(0);}}
+  .toast--success{background:var(--clr-success-lt);color:var(--clr-success);border-left:3px solid var(--clr-success);}
+  .toast--error{background:var(--clr-danger-lt);color:var(--clr-danger);border-left:3px solid var(--clr-danger);}
+  .page-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:1.75rem;padding-bottom:1.25rem;border-bottom:1px solid var(--clr-border);gap:1rem;flex-wrap:wrap;}
+  .page-header h2{margin:0;} .page-header p{font-size:.85rem;margin-top:.25rem;}
+  .empty-state{text-align:center;padding:4rem 2rem;color:var(--clr-muted);}
+  .empty-state__icon{font-size:2.5rem;margin-bottom:1rem;opacity:.5;}
+  .empty-state h3{font-family:var(--font-body);font-weight:400;font-size:1rem;margin-bottom:.5rem;color:var(--clr-text);}
+  .spinner{width:28px;height:28px;border:3px solid var(--clr-border);border-top-color:var(--clr-accent);border-radius:50%;animation:spin .7s linear infinite;margin:3rem auto;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem;}
+  @media (max-width:768px){.app-shell{grid-template-columns:1fr;}.sidebar{display:none;}.main-content{grid-column:1;padding:1rem;}.form-grid--2{grid-template-columns:1fr;}.page-header{flex-direction:column;align-items:flex-start;}}
+  </style>
+</head>
+<body>
+<div id="toast-container"></div>
+
+<!-- ===== MOCKS solo para la demo (en tu proyecto vienen de api.js / layout.js) ===== -->
+<script>
+const Auth = { requireAuth(){}, getUser(){ return { nombre:'Admin', rol:'admin' }; } };
+
+const UI = {
+  spinner(){ return '<div class="spinner"></div>'; },
+  emptyState(msg){ return `<div class="empty-state"><div class="empty-state__icon">🗂️</div><h3>${msg}</h3></div>`; },
+  badge(estado){
+    const map={activo:'badge--activo',inactivo:'badge--cancelada',abierta:'badge--abierta',
+      pendiente:'badge--pendiente',confirmada:'badge--confirmada',completada:'badge--completada',
+      cancelada:'badge--cancelada',no_asistio:'badge--no_asistio'};
+    return `<span class="badge ${map[estado]||'badge--activo'}">${estado}</span>`;
+  },
+  fechaCorta(f){ return f || '—'; }
+};
+
+const Toast = {
+  _show(msg,type){
+    const c=document.getElementById('toast-container');
+    const t=document.createElement('div'); t.className='toast toast--'+type; t.textContent=msg;
+    c.appendChild(t); setTimeout(()=>t.remove(),3200);
+  },
+  success(m){ this._show(m,'success'); },
+  error(m){ this._show(m,'error'); }
+};
+
+// "Bases de datos" en memoria
+let DB = [
+  {id_paciente:1, nombre:'Laura',  apellido:'Gómez',    email:'laura.gomez@mail.com',  ciudad:'Medellín', eps:'Sura',      estado:'activo',   telefono:'300 111 2233', direccion:'Cra 70 #45-12'},
+  {id_paciente:2, nombre:'Andrés', apellido:'Martínez', email:'andres.mtz@mail.com',   ciudad:'Bogotá',   eps:'Sanitas',   estado:'activo',   telefono:'301 222 3344', direccion:'Calle 80 #20-30'},
+  {id_paciente:3, nombre:'Camila', apellido:'Ríos',     email:'camila.rios@mail.com',  ciudad:'Cali',     eps:'Nueva EPS', estado:'inactivo', telefono:'',             direccion:''},
+];
+
+const PSIC = [
+  {nombre:'Laura', apellido:'Gómez', especialidad:'Psicología clínica y cognitivo-conductual', email:'laura.gomez@mentalpsique.com', precio:120000, duracion:60, bio:'Profesional de salud mental certificado.'},
+  {nombre:'Andrés', apellido:'Vargas', especialidad:'Psicología de parejas y familia', email:'andres.vargas@mentalpsique.com', precio:140000, duracion:50, bio:'Enfoque sistémico y terapia de pareja.'},
+];
+
+const CITAS = [
+  {paciente:'Laura Gómez',     psicologo:'A. Vargas', fecha:'15/06/2026 · 10:00', estado:'confirmada'},
+  {paciente:'Andrés Martínez', psicologo:'L. Gómez',  fecha:'15/06/2026 · 11:30', estado:'pendiente'},
+  {paciente:'Camila Ríos',     psicologo:'A. Vargas', fecha:'14/06/2026 · 09:00', estado:'completada'},
+];
+
+const HISTORIAS = [
+  {paciente:'Laura Gómez',     cie:'F41.1', apertura:'10/03/2024', estado:'abierta'},
+  {paciente:'Andrés Martínez', cie:'F32.0', apertura:'02/05/2024', estado:'abierta'},
+];
+
+const SESIONES = [
+  {fecha:'14/06/2026', paciente:'Camila Ríos',     psicologo:'A. Vargas', estado:'completada'},
+  {fecha:'15/06/2026', paciente:'Laura Gómez',     psicologo:'A. Vargas', estado:'confirmada'},
+  {fecha:'15/06/2026', paciente:'Andrés Martínez', psicologo:'L. Gómez',  estado:'pendiente'},
+];
+
+const API = {
+  pacientes: {
+    async listar(){ return JSON.parse(JSON.stringify(DB)); },
+    async crear(body){ const id=DB.reduce((m,p)=>Math.max(m,p.id_paciente),0)+1; DB.push({id_paciente:id,estado:'activo',...body}); return {id}; },
+    async actualizar(id, body){ Object.assign(DB.find(p=>p.id_paciente==id), body); },
+    async activar(id){ DB.find(p=>p.id_paciente==id).estado='activo'; },
+    async desactivar(id){ DB.find(p=>p.id_paciente==id).estado='inactivo'; },
+  },
+  historias: {
+    async obtener(id){
+      if(id===3) throw new Error('sin historia');
+      return { estado:'abierta', fecha_apertura:'10/03/2024', diagnostico_cie:'F41.1',
+        motivo_consulta:'Episodios de ansiedad y dificultad para conciliar el sueño.',
+        diagnostico_desc:'Trastorno de ansiedad generalizada.',
+        antecedentes:'Sin antecedentes psiquiátricos previos.' };
+    }
+  }
+};
+
+// Construye el layout: navbar + sidebar (menú completo) + main vacío
+function renderLayout(){
+  document.body.insertAdjacentHTML('afterbegin', `
+    <div class="app-shell">
+      <header class="navbar">
+        <div class="navbar__logo">Mental<span>Psique</span></div>
+        <div class="navbar__user">
+          <div class="navbar__avatar">A</div>
+          <span>Admin</span>
+          <button class="navbar__logout">Salir</button>
+        </div>
+      </header>
+      <aside class="sidebar">
+        <div class="sidebar__section">General</div>
+        <a class="sidebar__link" data-page="dashboard" onclick="navegar('dashboard')"><span class="sidebar__icon">📊</span> Dashboard</a>
+        <a class="sidebar__link" data-page="citas"     onclick="navegar('citas')"><span class="sidebar__icon">📅</span> Citas</a>
+        <div class="sidebar__section">Clínico</div>
+        <a class="sidebar__link" data-page="historias" onclick="navegar('historias')"><span class="sidebar__icon">📋</span> Historias clínicas</a>
+        <a class="sidebar__link" data-page="sesiones"  onclick="navegar('sesiones')"><span class="sidebar__icon">💬</span> Sesiones</a>
+        <div class="sidebar__section">Administración</div>
+        <a class="sidebar__link" data-page="pacientes"  onclick="navegar('pacientes')"><span class="sidebar__icon">🧑‍⚕️</span> Pacientes</a>
+        <a class="sidebar__link" data-page="psicologos" onclick="navegar('psicologos')"><span class="sidebar__icon">🧠</span> Psicólogos</a>
+      </aside>
+      <main class="main-content" id="main"></main>
+    </div>`);
+  return document.getElementById('main');
+}
+</script>
+
+<!-- ===== Enrutador + secciones ===== -->
+<script>
+Auth.requireAuth();
+const main = renderLayout();
+const user = Auth.getUser();
+let lista = [];
+
+const PAGES = {
+  dashboard:  renderDashboard,
+  citas:      renderCitas,
+  historias:  renderHistorias,
+  sesiones:   renderSesiones,
+  pacientes:  cargarPacientes,
+  psicologos: renderPsicologos,
+};
+
+function navegar(page){
+  document.querySelectorAll('.sidebar__link').forEach(a => a.classList.toggle('active', a.dataset.page === page));
+  (PAGES[page] || (()=>{}))();
+}
+
+// ── Dashboard ────────────────────────────────────────────────
+function renderDashboard(){
+  const activos = DB.filter(p=>p.estado!=='inactivo').length;
+  main.innerHTML = `
+    <div class="page-header"><div><h2>Dashboard</h2><p>Resumen general del consultorio</p></div></div>
+    <div class="stats-grid">
+      <div class="stat-card stat-card--sage">
+        <div class="stat-card__icon">🧑‍⚕️</div>
+        <div class="stat-card__value">${activos}</div>
+        <div class="stat-card__label">Pacientes activos</div>
+      </div>
+      <div class="stat-card stat-card--indigo">
+        <div class="stat-card__icon">🧠</div>
+        <div class="stat-card__value">${PSIC.length}</div>
+        <div class="stat-card__label">Psicólogos</div>
+      </div>
+      <div class="stat-card stat-card--warn">
+        <div class="stat-card__icon">📅</div>
+        <div class="stat-card__value">${CITAS.length}</div>
+        <div class="stat-card__label">Citas programadas</div>
+      </div>
+      <div class="stat-card stat-card--success">
+        <div class="stat-card__icon">✅</div>
+        <div class="stat-card__value">${SESIONES.filter(s=>s.estado==='completada').length}</div>
+        <div class="stat-card__label">Sesiones completadas</div>
+      </div>
+    </div>`;
+}
+
+// ── Citas ────────────────────────────────────────────────────
+function renderCitas(){
+  main.innerHTML = `
+    <div class="page-header"><div><h2>Citas</h2><p>Agenda de citas programadas</p></div></div>
+    <div class="table-wrap">
+      <div class="table-header"><h3>${CITAS.length} cita(s)</h3></div>
+      <table>
+        <thead><tr><th>Paciente</th><th>Psicólogo</th><th>Fecha y hora</th><th>Estado</th></tr></thead>
+        <tbody>
+          ${CITAS.map(c=>`
+            <tr>
+              <td><strong>${c.paciente}</strong></td>
+              <td style="color:var(--clr-muted)">${c.psicologo}</td>
+              <td>${c.fecha}</td>
+              <td>${UI.badge(c.estado)}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// ── Historias clínicas ───────────────────────────────────────
+function renderHistorias(){
+  main.innerHTML = `
+    <div class="page-header"><div><h2>Historias clínicas</h2><p>Registros clínicos de los pacientes</p></div></div>
+    <div class="table-wrap">
+      <div class="table-header"><h3>${HISTORIAS.length} historia(s)</h3></div>
+      <table>
+        <thead><tr><th>Paciente</th><th>CIE-10</th><th>Apertura</th><th>Estado</th></tr></thead>
+        <tbody>
+          ${HISTORIAS.map(h=>`
+            <tr>
+              <td><strong>${h.paciente}</strong></td>
+              <td>${h.cie}</td>
+              <td style="color:var(--clr-muted)">${h.apertura}</td>
+              <td>${UI.badge(h.estado)}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// ── Sesiones ─────────────────────────────────────────────────
+function renderSesiones(){
+  main.innerHTML = `
+    <div class="page-header"><div><h2>Sesiones</h2><p>Sesiones terapéuticas registradas</p></div></div>
+    <div class="table-wrap">
+      <div class="table-header"><h3>${SESIONES.length} sesión(es)</h3></div>
+      <table>
+        <thead><tr><th>Fecha</th><th>Paciente</th><th>Psicólogo</th><th>Estado</th></tr></thead>
+        <tbody>
+          ${SESIONES.map(s=>`
+            <tr>
+              <td>${s.fecha}</td>
+              <td><strong>${s.paciente}</strong></td>
+              <td style="color:var(--clr-muted)">${s.psicologo}</td>
+              <td>${UI.badge(s.estado)}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// ── Psicólogos ───────────────────────────────────────────────
+function renderPsicologos(){
+  main.innerHTML = `
+    <div class="page-header"><div><h2>Psicólogos</h2><p>Equipo de profesionales de salud mental</p></div></div>
+    <div class="card-grid">
+      ${PSIC.map(p=>`
+        <div class="stat-card">
+          <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem">
+            <div class="navbar__avatar" style="width:44px;height:44px;font-size:1rem;flex-shrink:0">${p.nombre[0]}</div>
+            <div style="flex:1">
+              <div style="font-weight:500;font-size:.95rem;color:var(--clr-text)">${p.nombre} ${p.apellido}</div>
+              <div style="font-size:.78rem;color:var(--clr-navy)">${p.especialidad}</div>
+            </div>
+            <span class="badge badge--activo">Activo</span>
+          </div>
+          <div style="font-size:.82rem;color:var(--clr-muted);margin-bottom:.75rem;line-height:1.5">${p.bio}</div>
+          <div style="font-size:.82rem;color:var(--clr-muted);margin-bottom:1rem">📧 ${p.email}</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding-top:.75rem;border-top:1px solid var(--clr-border);gap:.5rem;flex-wrap:wrap">
+            <span style="font-size:.82rem;color:var(--clr-muted)"><strong>${p.duracion} min</strong> · <strong>$${p.precio.toLocaleString('es-CO')}</strong></span>
+            <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+              <button class="btn btn--outline btn--sm" onclick="Toast.success('Horarios de ${p.nombre}')">Horarios</button>
+              <button class="btn btn--outline btn--sm" onclick="Toast.success('Editar ${p.nombre}')">Editar</button>
+            </div>
+          </div>
+        </div>`).join('')}
+    </div>`;
+}
+
+// ── Pacientes (CRUD completo) ────────────────────────────────
+async function cargarPacientes() {
+  main.innerHTML = `
+    <div class="page-header">
+      <div><h2>Pacientes</h2><p>Directorio de pacientes registrados</p></div>
+      <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap">
+        <input type="search" id="buscador" placeholder="Buscar por nombre o email…"
+          style="padding:.55rem .9rem;border:1px solid var(--clr-border);border-radius:var(--radius-sm);font-size:.85rem;background:var(--clr-surface);outline:none;min-width:220px">
+        ${user.rol === 'admin' ? '<button class="btn btn--primary" onclick="abrirModalCrear()">+ Agregar paciente</button>' : ''}
+      </div>
+    </div>
+    <div class="table-wrap" id="tabla">${UI.spinner()}</div>
+    ${modalCrear()}${modalEditar()}${modalHistoria()}${modalConfirmar()}
+  `;
+  document.getElementById('buscador').addEventListener('input', e => {
+    const q = e.target.value.toLowerCase();
+    renderTabla(lista.filter(p => `${p.nombre} ${p.apellido} ${p.email}`.toLowerCase().includes(q)));
+  });
+  try { lista = await API.pacientes.listar(); renderTabla(lista); }
+  catch(err){ Toast.error(err.message); }
+}
+
+function renderTabla(data) {
+  if (!data.length) { document.getElementById('tabla').innerHTML = UI.emptyState('No se encontraron pacientes'); return; }
+  document.getElementById('tabla').innerHTML = `
+    <div class="table-header"><h3>${data.length} paciente(s)</h3></div>
+    <table>
+      <thead><tr><th>Nombre</th><th>Email</th><th>Ciudad</th><th>EPS</th><th>Estado</th><th>Acciones</th></tr></thead>
+      <tbody>
+        ${data.map(p => `
+          <tr style="opacity:${p.estado === 'inactivo' ? '0.55' : '1'}">
+            <td><strong>${p.nombre} ${p.apellido}</strong></td>
+            <td style="color:var(--clr-muted)">${p.email}</td>
+            <td>${p.ciudad || '—'}</td>
+            <td>${p.eps || '—'}</td>
+            <td>${UI.badge(p.estado || 'activo')}</td>
+            <td>
+              <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+                <button class="btn btn--outline btn--sm" onclick='abrirEditar(${JSON.stringify(p)})'>Editar</button>
+                <button class="btn btn--outline btn--sm" onclick="verHistoria(${p.id_paciente})">Historia</button>
+                ${p.estado !== 'inactivo'
+                  ? `<button class="btn btn--danger btn--sm" onclick="confirmarAccion(${p.id_paciente},'desactivar','${p.nombre} ${p.apellido}')">Desactivar</button>`
+                  : `<button class="btn btn--outline btn--sm" style="border-color:var(--clr-success);color:var(--clr-success)" onclick="confirmarAccion(${p.id_paciente},'activar','${p.nombre} ${p.apellido}')">Activar</button>`}
+              </div>
+            </td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+function modalCrear() {
+  return `
+  <div class="modal-overlay" id="modal-crear">
+    <div class="modal" style="max-width:580px">
+      <div class="modal__header"><h3 class="modal__title">Registrar paciente</h3><button class="modal__close" onclick="cerrarModal('modal-crear')">✕</button></div>
+      <div style="display:grid;gap:1rem">
+        <p style="font-size:.82rem;padding:.75rem;background:var(--clr-indigo-lt);border-radius:var(--radius-sm);margin:0;color:var(--clr-muted)">
+          Se creará un usuario con rol <strong>paciente</strong> que podrá iniciar sesión con el email y la contraseña ingresados.
+        </p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+          <div class="form-group"><label>Nombre</label><input type="text" id="c-nombre" placeholder="Nombre"></div>
+          <div class="form-group"><label>Apellido</label><input type="text" id="c-apellido" placeholder="Apellido"></div>
+        </div>
+        <div class="form-group"><label>Correo electrónico</label><input type="email" id="c-email" placeholder="correo@ejemplo.com"></div>
+        <div class="form-group"><label>Contraseña temporal</label><input type="password" id="c-password" placeholder="Mínimo 8 caracteres"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+          <div class="form-group"><label>Teléfono</label><input type="text" id="c-telefono" placeholder="Ej: 300 123 4567"></div>
+          <div class="form-group"><label>Ciudad</label><input type="text" id="c-ciudad" placeholder="Ciudad"></div>
+        </div>
+        <div class="form-group"><label>EPS</label><input type="text" id="c-eps" placeholder="Entidad de salud"></div>
+        <div class="form-group"><label>Dirección</label><input type="text" id="c-direccion" placeholder="Dirección de residencia"></div>
+        <span class="form-error" id="c-error" style="text-align:center"></span>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--outline" onclick="cerrarModal('modal-crear')">Cancelar</button>
+        <button class="btn btn--primary" id="btn-guardar-crear" onclick="guardarPaciente()">Registrar paciente</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function modalEditar() {
+  return `
+  <div class="modal-overlay" id="modal-editar">
+    <div class="modal">
+      <div class="modal__header"><h3 class="modal__title">Editar paciente</h3><button class="modal__close" onclick="cerrarModal('modal-editar')">✕</button></div>
+      <input type="hidden" id="e-id">
+      <div class="form-grid form-grid--2">
+        <div class="form-group"><label>Teléfono</label><input type="text" id="e-telefono"></div>
+        <div class="form-group"><label>Ciudad</label><input type="text" id="e-ciudad"></div>
+        <div class="form-group" style="grid-column:1/-1"><label>EPS</label><input type="text" id="e-eps"></div>
+        <div class="form-group" style="grid-column:1/-1"><label>Dirección</label><input type="text" id="e-direccion"></div>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--outline" onclick="cerrarModal('modal-editar')">Cancelar</button>
+        <button class="btn btn--primary" onclick="guardarEdicion()">Guardar</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function modalHistoria() {
+  return `
+  <div class="modal-overlay" id="modal-historia">
+    <div class="modal" style="max-width:600px">
+      <div class="modal__header"><h3 class="modal__title">Historia clínica</h3><button class="modal__close" onclick="cerrarModal('modal-historia')">✕</button></div>
+      <div id="historia-content">${UI.spinner()}</div>
+      <div class="modal__footer"><button class="btn btn--outline" onclick="cerrarModal('modal-historia')">Cerrar</button></div>
+    </div>
+  </div>`;
+}
+
+function modalConfirmar() {
+  return `
+  <div class="modal-overlay" id="modal-confirmar">
+    <div class="modal" style="max-width:420px">
+      <div class="modal__header"><h3 class="modal__title" id="confirmar-titulo">Confirmar acción</h3><button class="modal__close" onclick="cerrarModal('modal-confirmar')">✕</button></div>
+      <p id="confirmar-texto" style="font-size:.9rem;color:var(--clr-muted);margin:.5rem 0 1rem"></p>
+      <input type="hidden" id="confirmar-id"><input type="hidden" id="confirmar-accion">
+      <div class="modal__footer">
+        <button class="btn btn--outline" onclick="cerrarModal('modal-confirmar')">Cancelar</button>
+        <button class="btn btn--danger" id="btn-confirmar" onclick="ejecutarAccion()">Confirmar</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function abrirModalCrear() {
+  ['c-nombre','c-apellido','c-email','c-password','c-telefono','c-ciudad','c-eps','c-direccion'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('c-error').textContent = '';
+  document.getElementById('modal-crear').classList.add('open');
+}
+
+async function guardarPaciente() {
+  const err = document.getElementById('c-error'), btn = document.getElementById('btn-guardar-crear');
+  err.textContent = '';
+  const nombre=document.getElementById('c-nombre').value.trim();
+  const apellido=document.getElementById('c-apellido').value.trim();
+  const email=document.getElementById('c-email').value.trim();
+  const password=document.getElementById('c-password').value;
+  const telefono=document.getElementById('c-telefono').value.trim();
+  const ciudad=document.getElementById('c-ciudad').value.trim();
+  const eps=document.getElementById('c-eps').value.trim();
+  const direccion=document.getElementById('c-direccion').value.trim();
+  if(!nombre||!apellido){err.textContent='Nombre y apellido son obligatorios';return;}
+  if(!email){err.textContent='El correo es obligatorio';return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){err.textContent='Ingresa un correo electrónico válido';return;}
+  if(password.length<8){err.textContent='La contraseña debe tener mínimo 8 caracteres';return;}
+  btn.disabled=true; btn.textContent='Registrando...';
+  try {
+    await API.pacientes.crear({nombre,apellido,email,password,telefono:telefono||null,ciudad:ciudad||null,eps:eps||null,direccion:direccion||null});
+    cerrarModal('modal-crear');
+    Toast.success(`Paciente ${nombre} ${apellido} registrado correctamente`);
+    lista=await API.pacientes.listar(); renderTabla(lista);
+  } catch(e){ err.textContent=e.message; }
+  finally{ btn.disabled=false; btn.textContent='Registrar paciente'; }
+}
+
+function abrirEditar(p) {
+  document.getElementById('e-id').value=p.id_paciente;
+  document.getElementById('e-telefono').value=p.telefono||'';
+  document.getElementById('e-ciudad').value=p.ciudad||'';
+  document.getElementById('e-eps').value=p.eps||'';
+  document.getElementById('e-direccion').value=p.direccion||'';
+  document.getElementById('modal-editar').classList.add('open');
+}
+
+async function guardarEdicion() {
+  const id=document.getElementById('e-id').value;
+  const body={telefono:document.getElementById('e-telefono').value,ciudad:document.getElementById('e-ciudad').value,eps:document.getElementById('e-eps').value,direccion:document.getElementById('e-direccion').value};
+  try { await API.pacientes.actualizar(id, body); cerrarModal('modal-editar'); Toast.success('Paciente actualizado'); lista=await API.pacientes.listar(); renderTabla(lista); }
+  catch(err){ Toast.error(err.message); }
+}
+
+async function verHistoria(id_paciente) {
+  document.getElementById('modal-historia').classList.add('open');
+  document.getElementById('historia-content').innerHTML = UI.spinner();
+  try {
+    const h = await API.historias.obtener(id_paciente);
+    document.getElementById('historia-content').innerHTML = `
+      <div style="display:grid;gap:1rem">
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;padding-bottom:1rem;border-bottom:1px solid var(--clr-border)">
+          <div><span style="font-size:.75rem;color:var(--clr-muted);text-transform:uppercase">Estado</span><div style="margin-top:.3rem">${UI.badge(h.estado)}</div></div>
+          <div><span style="font-size:.75rem;color:var(--clr-muted);text-transform:uppercase">Apertura</span><div style="margin-top:.3rem;font-size:.9rem">${UI.fechaCorta(h.fecha_apertura)}</div></div>
+          <div><span style="font-size:.75rem;color:var(--clr-muted);text-transform:uppercase">CIE-10</span><div style="margin-top:.3rem;font-size:.9rem">${h.diagnostico_cie||'—'}</div></div>
+        </div>
+        <div><strong style="font-size:.82rem">Motivo de consulta</strong><p style="margin-top:.4rem;font-size:.9rem;color:var(--clr-text)">${h.motivo_consulta}</p></div>
+        ${h.diagnostico_desc?`<div><strong style="font-size:.82rem">Diagnóstico</strong><p style="margin-top:.4rem;font-size:.9rem;color:var(--clr-text)">${h.diagnostico_desc}</p></div>`:''}
+        ${h.antecedentes?`<div><strong style="font-size:.82rem">Antecedentes</strong><p style="margin-top:.4rem;font-size:.9rem;color:var(--clr-text)">${h.antecedentes}</p></div>`:''}
+      </div>`;
+  } catch { document.getElementById('historia-content').innerHTML = UI.emptyState('Sin historia clínica registrada'); }
+}
+
+function confirmarAccion(id, accion, nombre) {
+  document.getElementById('confirmar-id').value=id;
+  document.getElementById('confirmar-accion').value=accion;
+  const esDesactivar = accion === 'desactivar';
+  document.getElementById('confirmar-titulo').textContent = esDesactivar ? 'Desactivar paciente' : 'Activar paciente';
+  document.getElementById('confirmar-texto').textContent = esDesactivar
+    ? `¿Seguro que deseas desactivar a ${nombre}? El paciente no podrá iniciar sesión hasta que lo reactives.`
+    : `¿Deseas reactivar la cuenta de ${nombre}?`;
+  const btn = document.getElementById('btn-confirmar');
+  btn.textContent = esDesactivar ? 'Desactivar' : 'Activar';
+  btn.className = esDesactivar ? 'btn btn--danger' : 'btn btn--primary';
+  document.getElementById('modal-confirmar').classList.add('open');
+}
+
+async function ejecutarAccion() {
+  const id=document.getElementById('confirmar-id').value;
+  const accion=document.getElementById('confirmar-accion').value;
+  try {
+    if(accion==='desactivar'){ await API.pacientes.desactivar(id); Toast.success('Paciente desactivado'); }
+    else { await API.pacientes.activar(id); Toast.success('Paciente activado'); }
+    cerrarModal('modal-confirmar'); lista=await API.pacientes.listar(); renderTabla(lista);
+  } catch(err){ Toast.error(err.message); }
+}
+
+function cerrarModal(id){ document.getElementById(id).classList.remove('open'); }
+
+// Página inicial
+navegar('pacientes');
+</script>
+</body>
+</html>

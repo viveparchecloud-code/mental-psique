@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MentalPsique — Iniciar sesión</title>
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/login.css">
+</head>
+<body>
+
+<div class="login-page">
+
+  <!-- Panel visual izquierdo -->
+  <div class="login-visual">
+    <div class="login-visual__brand">Mental<span>Psique</span></div>
+    <blockquote class="login-visual__quote">
+      "Las emociones inexpresadas nunca mueren. Son enterradas vivas y salen más tarde de peores formas."
+    </blockquote>
+    <p class="login-visual__author">— Sigmund Freud</p>
+  </div>
+
+  <!-- Formulario derecho -->
+  <div class="login-form-side">
+    <div class="login-box">
+      <h1 class="login-box__title">Bienvenido</h1>
+      <p class="login-box__sub">Ingresa tus credenciales para continuar</p>
+
+      <form id="form-login" class="form-grid" novalidate>
+        <div class="form-group">
+          <label for="email">Correo electrónico</label>
+          <input type="email" id="email" name="email"
+                 placeholder="tucorreo@ejemplo.com" required autocomplete="email">
+          <span class="form-error" id="err-email"></span>
+        </div>
+        <div class="form-group">
+          <label for="password">Contraseña</label>
+          <input type="password" id="password" name="password"
+                 placeholder="••••••••" required autocomplete="current-password">
+          <span class="form-error" id="err-password"></span>
+        </div>
+        <button type="submit" class="btn btn--primary" id="btn-submit">
+          Iniciar sesión
+        </button>
+        <span class="form-error" id="err-global" style="text-align:center"></span>
+      </form>
+
+      <div class="login-divider">o</div>
+
+      <p class="login-register-link">
+        ¿Eres nuevo paciente?
+        <a href="registro.html">Crear cuenta</a>
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast-container"></div>
+<script src="../js/api.js"></script>
+<script>
+  // Redirigir si ya tiene sesión
+  if (Auth.isLoggedIn()) {
+    window.location.href = 'dashboard.html';
+  }
+
+  document.getElementById('form-login').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn   = document.getElementById('btn-submit');
+    const email = document.getElementById('email').value.trim();
+    const pass  = document.getElementById('password').value;
+
+    document.querySelectorAll('.form-error').forEach(el => el.textContent = '');
+
+    let valid = true;
+    if (!email) { document.getElementById('err-email').textContent = 'Ingresa tu correo'; valid = false; }
+    if (!pass)  { document.getElementById('err-password').textContent = 'Ingresa tu contraseña'; valid = false; }
+    if (!valid) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Ingresando...';
+
+    try {
+      const data = await API.login({ email, password: pass });
+      Auth.setSession(data.token, data.usuario);
+      Toast.success('Bienvenido, ' + data.usuario.nombre);
+      setTimeout(() => { window.location.href = 'dashboard.html'; }, 600);
+    } catch (err) {
+      document.getElementById('err-global').textContent = err.message;
+      btn.disabled = false;
+      btn.textContent = 'Iniciar sesión';
+    }
+  });
+</script>
+</body>
+</html>

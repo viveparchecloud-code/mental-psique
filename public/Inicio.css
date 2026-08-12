@@ -1,0 +1,1146 @@
+/* ============================================================
+   MentalPsique — Inicio.css
+   Demuestra los 17 temas CSS del manual SENA DO-F-012 V08
+   Paleta AZUL · consultorio psicológico · regla 60-30-10
+   ============================================================ */
+
+/* ──────────────────────────────────────────────────────────────
+   TEMA 17 — Modern CSS Variables
+   :root define variables globales reutilizables en todo el doc
+
+   REGLA 60-30-10
+   · 60% Dominante / neutro  → fondos y superficies
+   · 30% Secundario          → estructura, texto y jerarquía (azules profundos)
+   · 10% Acento              → EXCLUSIVO para CTA y notificaciones críticas
+   ────────────────────────────────────────────────────────────── */
+:root {
+  /* === 60% — DOMINANTE / NEUTRO (fondos) === */
+  --color-bg:           #F4F7FB;  /* fondo general de la página */
+  --color-bg-section:   #EAF1F8;  /* fondo de secciones alternas */
+  --color-bg-card:      #FFFFFF;  /* tarjetas y superficies elevadas */
+
+  /* === 30% — SECUNDARIO (estructura y textos) === */
+  --color-navy:         #1E3A5F;  /* azul profundo: footer, base estructural */
+  --color-navy-soft:    #335A82;  /* navy más claro para detalles */
+  --color-secondary:    #4A7BA6;  /* azul medio de apoyo (gradientes, estados) */
+  --color-heading:      #1B3149;  /* títulos */
+  --color-text:         #213A52;  /* texto principal */
+  --color-muted:        #647D95;  /* texto secundario / apoyo */
+  --color-border:       #D7E2EE;  /* bordes y divisores */
+
+  /* === 10% — ACENTO (solo CTA y notificaciones críticas) === */
+  --color-accent:       #2F80C4;  /* azul de acción, confiable */
+  --color-accent-light: #5AA0DC;  /* variante clara del acento */
+  --color-accent-dark:  #246299;  /* hover del acento */
+
+  /* === Apoyo puntual === */
+  --color-star:         #E2B341;  /* estrellas de valoración (uso mínimo) */
+  --color-danger:       #C75A50;  /* errores de validación (color semántico) */
+  --color-white:        #FFFFFF;
+
+  /* Tipografía */
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body:    'Inter', system-ui, sans-serif;
+  --size-sm:      0.875rem;
+  --size-base:    1rem;
+  --size-lg:      1.25rem;
+  --size-xl:      1.5rem;
+
+  /* Espaciado */
+  --space-xs:  0.5rem;
+  --space-sm:  1rem;
+  --space-md:  1.5rem;
+  --space-lg:  2rem;
+  --space-xl:  4rem;
+  --space-2xl: 6rem;
+
+  /* Bordes y sombras */
+  --radius-sm:  8px;
+  --radius-md:  12px;
+  --radius-lg:  16px;
+  --radius-xl:  24px;
+  --shadow-sm:     0 2px 10px rgba(30,58,95,0.06);
+  --shadow-md:     0 10px 30px rgba(30,58,95,0.10);
+  --shadow-accent: 0 8px 24px rgba(47,128,196,0.28);
+  --shadow-soft:   0 8px 24px rgba(74,123,166,0.16);
+
+  /* Transiciones */
+  --transition-fast:   all 0.15s ease;
+  --transition-normal: all 0.25s ease;
+  --transition-slow:   all 0.4s ease;
+
+  /* Layout */
+  --nav-height:    70px;
+  --max-width:     1200px;
+  --sidebar-width: 280px;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   TEMA 1 — HTML / Reset base
+   Normaliza estilos entre navegadores
+   ────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;  /* TEMA 6: Box Model */
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;         /* Base para unidades rem — TEMA 8 */
+  scroll-behavior: smooth; /* Scroll suave para anclas */
+}
+
+body {
+  font-family: var(--font-body);     /* TEMA 17: variable */
+  background-color: var(--color-bg); /* TEMA 17: variable */
+  color: var(--color-text);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+img  { max-width: 100%; display: block; }
+a    { text-decoration: none; color: inherit; }
+ul   { list-style: none; }
+button { cursor: pointer; font-family: inherit; border: none; background: none; }
+
+/* ──────────────────────────────────────────────────────────────
+   TEMA 3 — Styling Text
+   Tipografía, pesos, espaciado, transformaciones
+   ────────────────────────────────────────────────────────────── */
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--color-heading);
+}
+
+h1 { font-size: clamp(2rem, 5vw, 3.8rem); }  /* TEMA 8: unidad clamp */
+h2 { font-size: clamp(1.8rem, 3vw, 2.6rem); }
+h3 { font-size: var(--size-xl); }
+h4 { font-size: var(--size-lg); }
+p  { font-size: var(--size-base); color: var(--color-muted); }
+
+.text-gradient {
+  background: linear-gradient(135deg, var(--color-navy), var(--color-accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Colores de texto con spans — TEMA 2: Spans
+   (tres matices de azul para dar variedad sin salir de paleta) */
+.highlight-purple { color: var(--color-accent);     font-style: italic; }
+.highlight-cyan   { color: var(--color-secondary);  font-style: italic; }
+.highlight-pink   { color: var(--color-navy-soft);  font-style: italic; }
+
+/* ──────────────────────────────────────────────────────────────
+   TEMA 5 — Selectors
+   Tipo, clase, ID, atributo, pseudo-clase, combinadores
+   ────────────────────────────────────────────────────────────── */
+
+/* Selector de tipo */
+section { width: 100%; }
+
+/* Selector de clase */
+.nav-container { max-width: var(--max-width); }
+
+/* Selector de atributo */
+input[type="email"]    { text-transform: lowercase; }
+input[required]        { border-left: 2px solid var(--color-accent); }
+button[type="submit"]  { font-weight: 500; }
+
+/* Pseudo-clase :hover, :focus, :first-child, :nth-child */
+.nav-links a:hover          { color: var(--color-text); }
+.nav-links a:first-child    { margin-left: 0; }
+.servicios-grid > *:nth-child(odd) { animation-delay: 0.1s; }
+.servicios-grid > *:nth-child(even){ animation-delay: 0.2s; }
+
+/* Selector descendiente y combinador hijo directo */
+.footer-links > div > h4   { color: var(--color-white); margin-bottom: var(--space-sm); }
+.footer-links > div > ul > li + li { margin-top: var(--space-xs); }
+
+/* Selector de hermano adyacente */
+.form-group + .form-group { margin-top: 0; }
+
+/* ──────────────────────────────────────────────────────────────
+   TEMA 7 — Specificity and The Cascade
+   Orden y especificidad demostrada con comentarios
+   ────────────────────────────────────────────────────────────── */
+
+/* Especificidad 0-1-0 (clase) — CTA con color de acento (10%) */
+.btn-primary { background: var(--color-accent); }
+
+/* Especificidad 0-2-0 (dos clases) — gana sobre la anterior */
+.nav-links .btn-primary { background: var(--color-accent-dark); }
+
+/* Especificidad 0-1-1 (clase + tipo) */
+button.registrarse { font-size: var(--size-sm); }
+
+/* ──────────────────────────────────────────────────────────────
+   TEMA 8 — CSS Units
+   px, rem, em, %, vw, vh, vmin, clamp()
+   ────────────────────────────────────────────────────────────── */
+.hero          { min-height: 100vh; }          /* vh — viewport height */
+.hero-content  { max-width: 900px; }           /* px — píxeles absolutos */
+.servicios     { padding: var(--space-2xl) 2rem; } /* rem — relativo a :root */
+.nav-container { padding: 0 2rem; }            /* rem */
+.servicio-item { padding: 2em 1em; }           /* em — relativo al padre */
+.slider-track  { width: 100%; }               /* % — relativo al contenedor */
+.hero-content h1 { font-size: clamp(2rem, 5vw, 3.8rem); } /* clamp() */
+
+/* ──────────────────────────────────────────────────────────────
+   TEMA 10 — Positioning
+   static, relative, absolute, fixed, sticky
+   ────────────────────────────────────────────────────────────── */
+
+/* fixed — barra de navegación siempre visible (vidrio claro) */
+header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* relative — contenedor para hijos absolute */
+.hero { position: relative; overflow: hidden; }
+.servicio-item { position: relative; overflow: hidden; }
+.testimonio-card { position: relative; }
+
+/* absolute — elementos decorativos sobre el padre (halos azules muy sutiles) */
+.hero-glow-1 {
+  position: absolute;
+  top: -200px; left: 50%;
+  transform: translateX(-50%);   /* TEMA 11: Transform */
+  width: 700px; height: 700px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(47,128,196,0.10) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero-glow-2 {
+  position: absolute;
+  bottom: -100px; right: -100px;
+  width: 500px; height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(74,123,166,0.08) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* sticky — signature dentro del hero */
+.hero-content { position: relative; z-index: 1; }
+
+/* ──────────────────────────────────────────────────────────────
+   TEMA 6 — The Box Model
+   content, padding, border, margin
+   ────────────────────────────────────────────────────────────── */
+.servicio-item {
+  /* content  → lo define el contenido */
+  padding: 2rem 1rem;          /* espacio interno */
+  border: 1px solid var(--color-border); /* borde */
+  margin: 0;                   /* sin margen externo (lo maneja el grid gap) */
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-card);
+  box-shadow: var(--shadow-sm);
+}
+
+.testimonio-card {
+  padding: 2rem 2rem 1.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  margin: 0;
+  background: var(--color-bg-card);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ──────────────────────────────────────────────────────────────
+   TEMA 9 — Backgrounds, Gradients & Filters
+   ────────────────────────────────────────────────────────────── */
+
+/* Gradiente lineal en logo (navy → acento) */
+.logo-text {
+  background: linear-gradient(135deg, var(--color-navy) 0%, var(--color-accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-family: var(--font-display);
+  font-size: var(--size-xl);
+  font-weight: 700;
+}
+
+/* Gradiente radial en hero (luz azul suave sobre fondo claro) */
+.hero {
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(47,128,196,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(74,123,166,0.06) 0%, transparent 50%),
+    var(--color-bg);
+}
+
+/* Gradiente lineal en ícono de servicio (tinte azul claro) */
+.servicio-icono {
+  background: linear-gradient(135deg,
+    rgba(47,128,196,0.14) 0%,
+    rgba(74,123,166,0.08) 100%);
+}
+
+/* Gradiente en avatar de testimonio */
+.testimonio-avatar {
+  background: linear-gradient(135deg, var(--color-navy) 0%, var(--color-accent) 100%);
+}
+
+/* filter: blur en el backdrop del nav */
+header { backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+
+/* filter: brightness en hover de servicios */
+.servicio-item:hover { filter: brightness(1.02); }
+
+/* Gradiente en overlay de tarjeta */
+.servicio-overlay {
+  background: linear-gradient(135deg,
+    rgba(47,128,196,0.08),
+    rgba(74,123,166,0.05));
+}
+
+/* ──────────────────────────────────────────────────────────────
+   TEMA 11 — Transitions and Transforms
+   ────────────────────────────────────────────────────────────── */
+
+/* Transition suave en links del nav */
+.nav-links a {
+  transition: var(--transition-fast);
+  transform-origin: center bottom;
+}
+
+/* Transform: scale en hover de botón primario */
+.registrarse {
+  transition: var(--transition-normal);
+}
+.registrarse:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: var(--shadow-accent);
+}
+
+/* Transform: translateY en tarjetas de servicio */
+.servicio-item {
+  transition: transform 0.25s ease, border-color 0.25s ease,
+              box-shadow 0.25s ease, filter 0.25s ease;
+}
+.servicio-item:hover {
+  transform: translateY(-8px);
+  border-color: var(--color-accent);
+  box-shadow: 0 16px 40px rgba(47,128,196,0.18);
+}
+
+/* Transform: rotate en icono de búsqueda */
+.search-btn {
+  transition: var(--transition-fast);
+}
+.search-btn:hover { transform: rotate(15deg) scale(1.1); }
+
+/* Transition en inputs */
+.contacto-form input,
+.contacto-form textarea {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease,
+              background-color 0.2s ease;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   TEMA 12 — Flexbox
+   ────────────────────────────────────────────────────────────── */
+
+/* Nav — flex horizontal con espacio entre logo y links */
+.nav-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--nav-height);
+  padding: 0 var(--space-lg);
+  margin: 0 auto;
+}
+
+/* Logo — flex para alinear imagen y texto */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+/* Nav links — flex horizontal */
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+/* Hero content — flex column centrado */
+.hero-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-sm);
+}
+
+/* H1 hero — flex column para las líneas */
+.hero-content h1 {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.hero-content h1 span { display: block; }
+
+/* Hero CTA — flex row centrado */
+.hero-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  justify-content: center;
+  margin-top: var(--space-md);
+}
+
+/* Rating — flex centrado */
+.rating {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xl);
+}
+
+.stars {
+  display: flex;
+  gap: 0.2rem;
+  color: var(--color-star);
+}
+
+/* Slider controls — flex centrado */
+.slider-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  margin-top: var(--space-lg);
+}
+
+.dots { display: flex; gap: 0.5rem; }
+
+/* Autor de testimonio — flex */
+.testimonio-autor {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Form buttons — flex */
+.form-buttons {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+/* Footer — flex */
+.footer-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xl);
+  justify-content: space-between;
+  align-items: flex-start;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: var(--space-2xl) var(--space-lg);
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xl);
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.social-links {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+/* ──────────────────────────────────────────────────────────────
+   TEMA 14 — CSS Grid
+   ────────────────────────────────────────────────────────────── */
+
+/* Grid de servicios — auto-fit responsive */
+.servicios-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1.5rem;
+  max-width: 900px;
+  margin: 0 auto var(--space-xl);
+}
+
+/* Grid del formulario de contacto — 2 columnas */
+.contacto-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+}
+
+/* Campos que ocupan 2 columnas */
+.contacto-form .form-group:nth-child(3),
+.contacto-form .form-group:nth-child(4),
+.contacto-form .form-buttons {
+  grid-column: 1 / -1;
+}
+
+/* Grid del footer — áreas nombradas */
+.footer-section {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+/* ──────────────────────────────────────────────────────────────
+   TEMA 2 — Spans, Divs, Tables, Semantic Markup
+   Estilos para elementos semánticos
+   ────────────────────────────────────────────────────────────── */
+
+/* Elementos semánticos: header, nav, main, section, footer, article */
+main { padding-top: var(--nav-height); }
+
+/* Secciones semánticas con padding consistente */
+.hero      { padding: calc(var(--nav-height) + 3rem) var(--space-lg) var(--space-2xl); }
+.servicios { padding: var(--space-2xl) var(--space-lg); }
+.testimonios { padding: var(--space-2xl) var(--space-lg); background: var(--color-bg-section); }
+.contacto    { padding: var(--space-2xl) var(--space-lg); }
+
+.servicios,
+.testimonios,
+.contacto { text-align: center; }
+
+/* Divs de layout */
+.section-inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+}
+
+.servicios > *,
+.testimonios > *,
+.contacto-inner { max-width: 700px; margin-left: auto; margin-right: auto; }
+
+/* Span como chip de categoría */
+.chip {
+  display: inline-block;
+  padding: 0.2rem 0.7rem;
+  background: rgba(47,128,196,0.10);
+  color: var(--color-accent-dark);
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   TEMA 4 — Forms
+   Inputs, selects, textareas, focus states
+   ────────────────────────────────────────────────────────────── */
+.contacto-form .form-group input,
+.contacto-form .form-group textarea {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: var(--size-base);
+  outline: none;
+}
+
+.contacto-form .form-group input::placeholder,
+.contacto-form .form-group textarea::placeholder {
+  color: var(--color-muted);
+  font-size: var(--size-sm);
+}
+
+/* Focus — único momento donde aparece el acento (10%) */
+.contacto-form .form-group input:focus,
+.contacto-form .form-group textarea:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(47,128,196,0.15);
+  background: var(--color-white);
+}
+
+.contacto-form .form-group input:valid { border-color: rgba(74,123,166,0.45); }
+.contacto-form .form-group input:invalid:not(:placeholder-shown) {
+  border-color: var(--color-danger);
+}
+
+.contacto-form .form-group textarea {
+  min-height: 120px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   TEMA 15 — Building Animations
+   @keyframes con múltiples pasos
+   ────────────────────────────────────────────────────────────── */
+
+/* Animación de entrada del hero */
+@keyframes fadeInUp {
+  0%   { opacity: 0; transform: translateY(30px); }
+  60%  { opacity: 1; }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Animación de pulso suave */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.7; }
+}
+
+/* Animación de aparición */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Animación de flotación */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-10px); }
+}
+
+/* Animación de brillo recorriendo la tarjeta */
+@keyframes shimmer {
+  0%   { transform: translateX(-100%) skewX(-12deg); }
+  100% { transform: translateX(200%)  skewX(-12deg); }
+}
+
+/* Animación del punto activo del slider */
+@keyframes dotExpand {
+  from { width: 8px; border-radius: 50%; }
+  to   { width: 24px; border-radius: 4px; }
+}
+
+/* Aplicar animaciones */
+.hero-content {
+  animation: fadeInUp 0.8s ease both;
+}
+
+.hero-content h1 {
+  animation: fadeInUp 0.8s ease 0.1s both;
+}
+
+.hero-cta {
+  animation: fadeInUp 0.8s ease 0.3s both;
+}
+
+.signature {
+  animation: fadeIn 1s ease 0.6s both;
+}
+
+.servicio-item {
+  animation: fadeInUp 0.6s ease both;
+}
+
+/* Brillo al hacer hover en tarjetas de servicio */
+.servicio-item::after {
+  /* TEMA 16: ::after */
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(47,128,196,0.06),
+    transparent
+  );
+  transform: translateX(-100%) skewX(-12deg);
+}
+
+.servicio-item:hover::after {
+  animation: shimmer 0.6s ease forwards;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   TEMA 16 — ::before and ::after Pseudo-Elements
+   ────────────────────────────────────────────────────────────── */
+
+/* ::before — comillas decorativas en testimonios */
+.testimonio-card::before {
+  content: '\201C';            /* carácter " */
+  font-family: var(--font-display);
+  font-size: 5rem;
+  line-height: 1;
+  color: var(--color-navy);
+  opacity: 0.15;
+  position: absolute;
+  top: 0.5rem;
+  left: 1.5rem;
+}
+
+/* ::after — línea decorativa debajo de los títulos de sección */
+.servicios h2::after,
+.testimonios h2::after,
+.contacto h2::after {
+  content: '';
+  display: block;
+  width: 48px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-navy), var(--color-accent));
+  border-radius: 2px;
+  margin: 0.75rem auto 0;
+}
+
+/* ::before — punto decorativo en links del footer */
+.footer-section ul li::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--color-accent-light);
+  margin-right: 0.5rem;
+  vertical-align: middle;
+  opacity: 0.8;
+}
+
+/* ::after — indicador de enlace activo en el nav */
+.nav-links a.active::after {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: var(--color-accent);
+  border-radius: 1px;
+  margin-top: 2px;
+}
+
+/* ::before — ícono decorativo en el botón primario */
+.btn-hero-primary::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.7);
+  margin-right: 0.5rem;
+  vertical-align: middle;
+  animation: pulse 1.5s infinite;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   TEMA 13 — Making Responsive Websites With Media Queries
+   ────────────────────────────────────────────────────────────── */
+
+/* Tablet — 1024px */
+@media (max-width: 1024px) {
+  .servicios-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .footer-content {
+    flex-direction: column;
+    gap: var(--space-xl);
+  }
+
+  .footer-links {
+    justify-content: flex-start;
+  }
+}
+
+/* Tablet pequeña — 768px */
+@media (max-width: 768px) {
+  /* Nav: ocultar links y mostrar solo botones */
+  .nav-links {
+    gap: var(--space-sm);
+  }
+
+  .nav-links a:not(.active) {
+    display: none;
+  }
+
+  /* Hero: reducir padding */
+  .hero {
+    padding: calc(var(--nav-height) + 2rem) var(--space-sm) var(--space-xl);
+  }
+
+  /* Grid de servicios: 2 columnas */
+  .servicios-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-sm);
+  }
+
+  /* Formulario: 1 columna */
+  .contacto-form {
+    grid-template-columns: 1fr;
+  }
+
+  .contacto-form .form-group:nth-child(3),
+  .contacto-form .form-group:nth-child(4),
+  .contacto-form .form-buttons {
+    grid-column: 1;
+  }
+
+  /* Footer: columna única */
+  .footer-links {
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+
+  .form-buttons {
+    flex-direction: column;
+  }
+}
+
+/* Móvil — 480px */
+@media (max-width: 480px) {
+  /* Tipografía más pequeña */
+  h1 { font-size: 1.9rem; }
+  h2 { font-size: 1.6rem; }
+
+  /* Nav: logo reducido */
+  .logo-text { font-size: var(--size-lg); }
+  .iniciar-sesion { display: none; }
+
+  /* Hero CTA: botones en columna */
+  .hero-cta {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .btn-hero-primary,
+  .btn-hero-secondary {
+    width: 100%;
+    max-width: 280px;
+    text-align: center;
+  }
+
+  /* Servicios: 1 columna */
+  .servicios-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Rating: columna */
+  .rating {
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────
+   COMPONENTES ESPECÍFICOS
+   ────────────────────────────────────────────────────────────── */
+
+/* Navbar */
+.nav-links a {
+  font-size: var(--size-sm);
+  color: var(--color-muted);
+  font-weight: 500;
+  padding-bottom: 2px;
+  position: relative;       /* TEMA 10: para el ::after */
+}
+
+.nav-links a.active { color: var(--color-accent); }
+
+.iniciar-sesion {
+  padding: 0.5rem 1.2rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: var(--size-sm);
+  font-weight: 400;
+  transition: var(--transition-fast);
+}
+
+.iniciar-sesion:hover {
+  border-color: var(--color-navy);
+  color: var(--color-navy);
+}
+
+/* CTA principal del nav — color de acento (10%) */
+.registrarse {
+  padding: 0.5rem 1.2rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-accent);
+  color: var(--color-white);
+  font-size: var(--size-sm);
+  font-weight: 500;
+}
+
+.search-btn {
+  color: var(--color-muted);
+  font-size: 1rem;
+  padding: 0.4rem;
+}
+
+/* Botones hero */
+.btn-hero-primary,
+.btn-hero-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.9rem 2rem;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--size-base);
+  font-weight: 500;
+  text-decoration: none;
+  transition: var(--transition-normal);
+}
+
+/* CTA primario hero — acento (10%) */
+.btn-hero-primary {
+  background: var(--color-accent);
+  color: var(--color-white);
+  border: 2px solid var(--color-accent);
+}
+
+.btn-hero-primary:hover {
+  background: var(--color-accent-dark);
+  border-color: var(--color-accent-dark);
+  box-shadow: var(--shadow-accent);
+}
+
+/* Acción secundaria hero — neutra/estructural (no es acento) */
+.btn-hero-secondary {
+  background: transparent;
+  color: var(--color-navy);
+  border: 1px solid var(--color-border);
+}
+
+.btn-hero-secondary:hover {
+  border-color: var(--color-navy);
+  color: var(--color-navy);
+}
+
+/* Firma Freud */
+.signature {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: var(--size-lg);
+  color: var(--color-muted);
+  margin-top: var(--space-xs);
+}
+
+/* Servicios */
+.servicio-icono {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  margin: 0 auto var(--space-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+}
+
+.servicio-icono img { width: 40px; height: 40px; object-fit: contain; }
+
+.servicio-item h3 {
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--color-muted);
+  transition: color 0.2s;
+}
+
+.servicio-item:hover h3 { color: var(--color-accent); }
+
+/* CTA de servicio — acento en contorno (10%) */
+.saber-mas {
+  padding: 0.85rem 2.5rem;
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  color: var(--color-accent);
+  font-family: var(--font-body);
+  font-size: var(--size-sm);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  transition: var(--transition-normal);
+}
+
+.saber-mas:hover {
+  background: var(--color-accent);
+  color: var(--color-white);
+  box-shadow: var(--shadow-accent);
+}
+
+/* Testimonios */
+.testimonio-texto {
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: var(--color-text);
+  font-style: italic;
+  margin-bottom: var(--space-md);
+  padding-top: var(--space-md);
+}
+
+.testimonio-nombre { font-weight: 600; font-size: 0.9rem; color: var(--color-heading); }
+.testimonio-cargo  { font-size: 0.78rem; color: var(--color-muted); }
+
+.testimonio-avatar {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: var(--color-white);
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.prev, .next {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+  color: var(--color-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  transition: var(--transition-fast);
+}
+
+.prev:hover, .next:hover {
+  border-color: var(--color-navy);
+  color: var(--color-navy);
+  transform: scale(1.08);
+}
+
+.dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--color-border);
+  cursor: pointer;
+  transition: var(--transition-normal);
+}
+
+.dot.active {
+  background: var(--color-accent);
+  width: 24px;
+  border-radius: 4px;
+  animation: dotExpand 0.25s ease forwards;
+}
+
+/* Formulario de contacto */
+/* CTA principal — acento (10%) */
+.btn-enviar {
+  width: 100%;
+  padding: 0.9rem;
+  background: var(--color-accent);
+  color: var(--color-white);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--size-base);
+  font-weight: 500;
+  transition: var(--transition-normal);
+}
+
+.btn-enviar:hover {
+  background: var(--color-accent-dark);
+  box-shadow: var(--shadow-accent);
+  transform: translateY(-1px);
+}
+
+/* Acción secundaria — contorno neutro/estructural */
+.btn-agendar {
+  width: 100%;
+  padding: 0.9rem;
+  background: transparent;
+  color: var(--color-navy);
+  border: 1px solid var(--color-navy);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--size-base);
+  font-weight: 500;
+  transition: var(--transition-normal);
+}
+
+.btn-agendar:hover {
+  background: rgba(30,58,95,0.06);
+  box-shadow: var(--shadow-soft);
+  transform: translateY(-1px);
+}
+
+/* Footer — ancla estructural en azul profundo (30%) */
+.footer {
+  background: var(--color-navy);
+  border-top: 1px solid var(--color-border);
+  color: #C7D6E5;
+}
+
+.footer-logo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.footer-logo h3 {
+  font-family: var(--font-display);
+  font-size: var(--size-xl);
+  font-weight: 400;
+  background: linear-gradient(135deg, var(--color-accent-light), var(--color-white));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.footer-section h4 {
+  font-family: var(--font-body);
+  font-size: var(--size-sm);
+  font-weight: 500;
+  color: var(--color-white);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: var(--space-sm);
+}
+
+.footer-section ul li {
+  font-size: var(--size-sm);
+  color: #AEC1D4;
+  padding: 0.2rem 0;
+  transition: color 0.15s;
+}
+
+.footer-section ul li a:hover { color: var(--color-accent-light); }
+
+.social-icon {
+  width: 38px; height: 38px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255,255,255,0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #AEC1D4;
+  font-size: 0.88rem;
+  transition: var(--transition-fast);
+}
+
+.social-icon:hover {
+  border-color: var(--color-accent-light);
+  color: var(--color-white);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(47,128,196,0.25);
+}
+
+.footer-bottom {
+  border-top: 1px solid rgba(255,255,255,0.12);
+  text-align: center;
+  padding: var(--space-md) var(--space-lg);
+}
+
+.footer-bottom p {
+  font-size: var(--size-sm);
+  color: #8FA6BC;
+}
