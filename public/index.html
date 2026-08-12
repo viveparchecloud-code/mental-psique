@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>MentalPsique</title>
+  <script src="js/api.js"></script>
+  <script>
+    // Punto de entrada: redirige según sesión activa
+    if (Auth.isLoggedIn()) {
+      window.location.replace('pages/dashboard.html');
+    } else {
+      window.location.replace('pages/login.html');
+    }
+  </script>
+</head>
+<body></body>
+</html>

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MentalPsique — Consentimiento Informado</title>
+  <link rel="stylesheet" href="../css/global.css">
+</head>
+<body>
+<script src="../js/api.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+Auth.requireAuth();
+const main = renderLayout('Consentimiento');
+const user = Auth.getUser();
+
+if (user.rol !== 'paciente') window.location.href = 'dashboard.html';
+
+async function load() {
+  main.innerHTML = `
+    <div class="page-header">
+      <div>
+        <h2>Consentimiento informado</h2>
+        <p>Lee el documento completo antes de firmar</p>
+      </div>
+    </div>
+    <div id="content" style="max-width:700px">${UI.spinner()}</div>
+  `;
+
+  try {
+    const perfil  = await API.pacientes.miPerfil();
+    const consent = await API.consentimientos.obtener(perfil.id_paciente).catch(() => ({ aceptado: false }));
+
+    document.getElementById('content').innerHTML = `
+
+      <!-- Estado actual -->
+      ${consent.aceptado ? `
+        <div style="background:var(--clr-success-lt);border:1px solid var(--clr-success);
+             border-radius:var(--radius-md);padding:1.25rem 1.5rem;margin-bottom:1.5rem;
+             display:flex;align-items:center;gap:1rem">
+          <span style="font-size:1.3rem">✓</span>
+          <div>
+            <div style="font-weight:500;color:var(--clr-success)">Consentimiento firmado</div>
+            <div style="font-size:.82rem;color:var(--clr-success);margin-top:.15rem">
+              Firmado el ${UI.fechaCorta(consent.fecha_firma)}
+              ${consent.ip_firma ? ' · IP: ' + consent.ip_firma : ''}
+            </div>
+          </div>
+        </div>` : `
+        <div style="background:var(--clr-warn-lt);border:1px solid var(--clr-warn);
+             border-radius:var(--radius-md);padding:1.25rem 1.5rem;margin-bottom:1.5rem;
+             display:flex;align-items:center;gap:1rem">
+          <span style="font-size:1.3rem">⚠</span>
+          <div>
+            <div style="font-weight:500;color:var(--clr-warn)">Pendiente de firma</div>
+            <div style="font-size:.82rem;color:var(--clr-warn);margin-top:.15rem">
+              Debes firmar el consentimiento para acceder a todos los servicios de MentalPsique.
+            </div>
+          </div>
+        </div>`}
+
+      <!-- Documento -->
+      <div class="form-card" style="max-width:100%;margin-bottom:1.5rem">
+        <h3 style="font-family:var(--font-display);font-weight:400;font-size:1.2rem;
+             margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid var(--clr-border)">
+          CONSENTIMIENTO INFORMADO — MentalPsique v1.0
+        </h3>
+
+        <div style="font-size:.88rem;line-height:1.8;color:var(--clr-text);display:grid;gap:1rem">
+
+          <p>Yo, como paciente de <strong>MentalPsique</strong>, declaro haber sido informado/a
+          sobre la naturaleza de los servicios de salud mental que se me ofrecen, y autorizo
+          voluntariamente lo siguiente:</p>
+
+          <div>
+            <strong style="color:var(--clr-sage-dk)">1. Recopilación de información personal</strong>
+            <p style="margin-top:.4rem">Autorizo a MentalPsique y al profesional de salud mental
+            asignado a recopilar, almacenar y procesar mi información personal y clínica,
+            incluyendo datos de identificación, motivo de consulta, antecedentes médicos
+            y notas de evolución.</p>
+          </div>
+
+          <div>
+            <strong style="color:var(--clr-sage-dk)">2. Confidencialidad</strong>
+            <p style="margin-top:.4rem">La información suministrada será tratada con estricta
+            confidencialidad y utilizada exclusivamente para fines terapéuticos. No será
+            compartida con terceros sin mi consentimiento expreso, salvo en casos donde
+            exista riesgo para mi vida o la de terceros, según lo establece la ley.</p>
+          </div>
+
+          <div>
+            <strong style="color:var(--clr-sage-dk)">3. Protección de datos</strong>
+            <p style="margin-top:.4rem">La información será tratada conforme a la
+            <strong>Ley 1581 de 2012</strong> (Protección de Datos Personales - Colombia)
+            y sus decretos reglamentarios. Tengo derecho a conocer, actualizar y rectificar
+            mis datos en cualquier momento.</p>
+          </div>
+
+          <div>
+            <strong style="color:var(--clr-sage-dk)">4. Historia clínica</strong>
+            <p style="margin-top:.4rem">Autorizo la creación y mantenimiento de mi historia
+            clínica electrónica, conforme a la <strong>Resolución 1995 de 1999</strong>
+            del Ministerio de Salud de Colombia, que regula el manejo de historias clínicas.</p>
+          </div>
+
+          <div>
+            <strong style="color:var(--clr-sage-dk)">5. Modalidades de atención</strong>
+            <p style="margin-top:.4rem">Entiendo que las consultas pueden realizarse de forma
+            presencial, por videollamada o telefónica, y que cada modalidad mantiene los
+            mismos estándares de confidencialidad y calidad.</p>
+          </div>
+
+          <div>
+            <strong style="color:var(--clr-sage-dk)">6. Voluntariedad</strong>
+            <p style="margin-top:.4rem">Comprendo que mi participación en el proceso terapéutico
+            es completamente voluntaria y puedo retirar este consentimiento en cualquier momento,
+            sin que ello afecte la calidad de la atención recibida.</p>
+          </div>
+
+          <div style="background:var(--clr-bg);border-radius:var(--radius-sm);
+               padding:1rem;border-left:3px solid var(--clr-sage)">
+            <p style="font-size:.82rem;color:var(--clr-muted);margin:0">
+              Al firmar este consentimiento, confirmo que he leído y entendido completamente
+              su contenido, que tuve la oportunidad de hacer preguntas, y que acepto
+              voluntariamente los términos descritos. La firma quedará registrada con fecha,
+              hora y dirección IP como constancia digital.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botón firmar -->
+      ${!consent.aceptado ? `
+        <div style="display:flex;gap:1rem;align-items:center">
+          <button class="btn btn--primary" id="btn-firmar"
+                  onclick="firmar(${perfil.id_paciente})"
+                  style="padding:.75rem 2rem;font-size:.95rem">
+            Firmar consentimiento
+          </button>
+          <span style="font-size:.8rem;color:var(--clr-muted)">
+            Al firmar aceptas todos los términos descritos anteriormente
+          </span>
+        </div>` : `
+        <div style="display:flex;gap:.75rem">
+          <a href="dashboard.html" class="btn btn--outline">
+            Volver al dashboard
+          </a>
+          <a href="citas.html" class="btn btn--primary">
+            Agendar una cita
+          </a>
+        </div>`}
+    `;
+
+  } catch(err) {
+    Toast.error(err.message);
+  }
+}
+
+async function firmar(id_paciente) {
+  const btn = document.getElementById('btn-firmar');
+  btn.disabled = true;
+  btn.textContent = 'Firmando...';
+  try {
+    await API.consentimientos.firmar(id_paciente);
+    Toast.success('Consentimiento firmado correctamente');
+    setTimeout(() => load(), 800);
+  } catch(err) {
+    Toast.error(err.message);
+    btn.disabled = false;
+    btn.textContent = 'Firmar consentimiento';
+  }
+}
+
+load();
+</script>
+</body>
+</html>

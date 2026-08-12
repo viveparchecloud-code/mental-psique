@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MentalPsique — Dashboard</title>
+  <link rel="stylesheet" href="../css/global.css">
+</head>
+<body>
+<script src="../js/api.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+Auth.requireAuth();
+const main = renderLayout('Dashboard');
+const user = Auth.getUser();
+
+async function loadDashboard() {
+  main.innerHTML = `
+    <div class="page-header">
+      <div>
+        <h2>Bienvenido, ${user.nombre}</h2>
+        <p>Panel de control — ${user.rol}</p>
+      </div>
+    </div>
+    <div id="stats" class="stats-grid">${UI.spinner()}</div>
+    <div id="proximas-citas" class="table-wrap" style="margin-top:1.5rem"></div>
+  `;
+
+  try {
+    const citas = await API.citas.listar();
+    const pendientes  = citas.filter(c => c.estado === 'pendiente').length;
+    const confirmadas = citas.filter(c => c.estado === 'confirmada').length;
+    const completadas = citas.filter(c => c.estado === 'completada').length;
+    const canceladas  = citas.filter(c => c.estado === 'cancelada').length;
+
+    let extraStats = '';
+    if (user.rol === 'admin' || user.rol === 'psicologo') {
+      const pacientes = await API.pacientes.listar();
+      extraStats = `
+        <div class="stat-card stat-card--success">
+          <div class="stat-card__icon">◎</div>
+          <div class="stat-card__value">${pacientes.length}</div>
+          <div class="stat-card__label">Pacientes registrados</div>
+        </div>`;
+    }
+
+    document.getElementById('stats').innerHTML = `
+      <div class="stat-card stat-card--warn">
+        <div class="stat-card__icon">◇</div>
+        <div class="stat-card__value">${pendientes}</div>
+        <div class="stat-card__label">Citas pendientes</div>
+      </div>
+      <div class="stat-card stat-card--indigo">
+        <div class="stat-card__icon">◈</div>
+        <div class="stat-card__value">${confirmadas}</div>
+        <div class="stat-card__label">Citas confirmadas</div>
+      </div>
+      <div class="stat-card stat-card--success">
+        <div class="stat-card__icon">◆</div>
+        <div class="stat-card__value">${completadas}</div>
+        <div class="stat-card__label">Sesiones completadas</div>
+      </div>
+      <div class="stat-card stat-card--sage">
+        <div class="stat-card__icon">◉</div>
+        <div class="stat-card__value">${canceladas}</div>
+        <div class="stat-card__label">Citas canceladas</div>
+      </div>
+      ${extraStats}
+    `;
+
+    // Próximas citas
+    const proximas = citas
+      .filter(c => ['pendiente','confirmada'].includes(c.estado))
+      .slice(0, 5);
+
+    const tbody = proximas.length ? proximas.map(c => `
+      <tr>
+        <td>${UI.fecha(c.fecha_hora)}</td>
+        <td>${c.nombre_paciente || '—'} ${c.apellido_paciente || ''}</td>
+        <td>${c.nombre_psicologo || '—'} ${c.apellido_psicologo || ''}</td>
+        <td>${c.modalidad}</td>
+        <td>${UI.badge(c.estado)}</td>
+        <td><a href="citas.html" class="btn btn--outline btn--sm">Ver</a></td>
+      </tr>`).join('') :
+      `<tr><td colspan="6">${UI.emptyState('Sin citas próximas')}</td></tr>`;
+
+    document.getElementById('proximas-citas').innerHTML = `
+      <div class="table-header">
+        <h3>Próximas citas</h3>
+        <a href="citas.html" class="btn btn--outline btn--sm">Ver todas</a>
+      </div>
+      <table>
+        <thead><tr>
+          <th>Fecha y hora</th><th>Paciente</th><th>Psicólogo</th>
+          <th>Modalidad</th><th>Estado</th><th></th>
+        </tr></thead>
+        <tbody>${tbody}</tbody>
+      </table>`;
+  } catch (err) {
+    Toast.error(err.message);
+  }
+}
+
+loadDashboard();
+</script>
+</body>
+</html>

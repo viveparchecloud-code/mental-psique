@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MentalPsique — Sesiones</title>
+  <link rel="stylesheet" href="../css/global.css">
+</head>
+<body>
+<script src="../js/api.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+Auth.requireAuth();
+const main = renderLayout('Sesiones');
+const user = Auth.getUser();
+if (user.rol === 'paciente') window.location.href = 'dashboard.html';
+
+let pacientesList = [];
+let historiaActivaId = null;
+let sesionesActivas = [];
+let pacienteActivoNombre = '';
+
+async function load() {
+  main.innerHTML = `
+    <div class="page-header">
+      <div><h2>Sesiones clínicas</h2><p>Notas de evolución por paciente</p></div>
+    </div>
+
+    <!-- Buscador -->
+    <div style="margin-bottom:1.25rem">
+      <input type="search" id="buscador" placeholder="Buscar paciente por nombre…"
+        style="padding:.55rem .9rem;border:1px solid var(--clr-border);
+               border-radius:var(--radius-sm);font-size:.85rem;
+               background:var(--clr-surface);outline:none;min-width:260px">
+    </div>
+
+    <div class="table-wrap" id="tabla">${UI.spinner()}</div>
+
+    <!-- Modal Sesiones -->
+    <div class="modal-overlay" id="modal-sesiones">
+      <div class="modal" style="max-width:700px">
+        <div class="modal__header">
+          <div>
+            <h3 class="modal__title" id="sesiones-titulo">Sesiones</h3>
+            <p id="sesiones-subtitulo" style="font-size:.82rem;color:var(--clr-muted);margin-top:.2rem"></p>
+          </div>
+          <button class="modal__close" onclick="cerrarModal('modal-sesiones')">✕</button>
+        </div>
+        <div id="sesiones-content"></div>
+        <div class="modal__footer">
+          <button class="btn btn--outline" onclick="cerrarModal('modal-sesiones')">Cerrar</button>
+          <button class="btn btn--primary" id="btn-nueva-sesion" onclick="abrirNuevaSesion()">
+            + Nueva sesión
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Nueva Sesión -->
+    <div class="modal-overlay" id="modal-nueva-sesion">
+      <div class="modal" style="max-width:560px">
+        <div class="modal__header">
+          <h3 class="modal__title">Registrar sesión</h3>
+          <button class="modal__close" onclick="cerrarModal('modal-nueva-sesion')">✕</button>
+        </div>
+        <input type="hidden" id="ns-historia-id">
+        <div style="display:grid;gap:1rem">
+          <div class="form-group">
+            <label>Cita vinculada (ID)</label>
+            <input type="number" id="ns-cita-id" placeholder="ID de la cita completada">
+          </div>
+          <div class="form-group">
+            <label>Fecha de sesión</label>
+            <input type="date" id="ns-fecha">
+          </div>
+          <div class="form-group">
+            <label>Evolución / Nota clínica <span style="color:var(--clr-danger)">*</span></label>
+            <textarea id="ns-evolucion" rows="4"
+              placeholder="Describe la evolución del paciente en esta sesión…"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Plan de tratamiento</label>
+            <textarea id="ns-plan" rows="2"
+              placeholder="Acciones y objetivos para próximas sesiones…"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Observaciones adicionales</label>
+            <textarea id="ns-obs" rows="2" placeholder="Opcional…"></textarea>
+          </div>
+          <span class="form-error" id="ns-error"></span>
+        </div>
+        <div class="modal__footer">
+          <button class="btn btn--outline" onclick="cerrarModal('modal-nueva-sesion')">Cancelar</button>
+          <button class="btn btn--primary" onclick="guardarNuevaSesion()">Guardar sesión</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Editar Sesión -->
+    <div class="modal-overlay" id="modal-editar-sesion">
+      <div class="modal" style="max-width:560px">
+        <div class="modal__header">
+          <h3 class="modal__title" id="editar-sesion-titulo">Editar sesión</h3>
+          <button class="modal__close" onclick="cerrarModal('modal-editar-sesion')">✕</button>
+        </div>
+        <input type="hidden" id="edit-sesion-id">
+        <div style="display:grid;gap:1rem">
+          <div class="form-group">
+            <label>Evolución / Nota clínica <span style="color:var(--clr-danger)">*</span></label>
+            <textarea id="edit-evolucion" rows="4"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Plan de tratamiento</label>
+            <textarea id="edit-plan" rows="2"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Observaciones adicionales</label>
+            <textarea id="edit-obs" rows="2"></textarea>
+          </div>
+          <span class="form-error" id="edit-sesion-error"></span>
+        </div>
+        <div class="modal__footer">
+          <button class="btn btn--outline" onclick="cerrarModal('modal-editar-sesion')">Cancelar</button>
+          <button class="btn btn--primary" id="btn-guardar-edit-sesion"
+                  onclick="guardarEdicionSesion()">Guardar cambios</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Confirmar eliminar -->
+    <div class="modal-overlay" id="modal-confirmar-sesion">
+      <div class="modal" style="max-width:420px">
+        <div class="modal__header">
+          <h3 class="modal__title">Eliminar sesión</h3>
+          <button class="modal__close" onclick="cerrarModal('modal-confirmar-sesion')">✕</button>
+        </div>
+        <p style="font-size:.9rem;color:var(--clr-muted);margin:.5rem 0 1rem">
+          ⚠ ¿Seguro que deseas eliminar esta sesión? La cita volverá a estado
+          <strong>confirmada</strong> y se perderán las notas registradas.
+        </p>
+        <input type="hidden" id="eliminar-sesion-id">
+        <div class="modal__footer">
+          <button class="btn btn--outline" onclick="cerrarModal('modal-confirmar-sesion')">Cancelar</button>
+          <button class="btn btn--danger" onclick="ejecutarEliminarSesion()">🗑 Eliminar</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('buscador').addEventListener('input', e => {
+    const q = e.target.value.toLowerCase();
+    renderTabla(pacientesList.filter(p =>
+      `${p.nombre} ${p.apellido}`.toLowerCase().includes(q)
+    ));
+  });
+
+  try {
+    pacientesList = await API.pacientes.listar();
+    renderTabla(pacientesList);
+  } catch(err) { Toast.error(err.message); }
+}
+
+function renderTabla(data) {
+  if (!data.length) {
+    document.getElementById('tabla').innerHTML = UI.emptyState('No hay pacientes registrados');
+    return;
+  }
+  document.getElementById('tabla').innerHTML = `
+    <div class="table-header"><h3>${data.length} paciente(s)</h3></div>
+    <table>
+      <thead><tr>
+        <th>Paciente</th><th>Email</th><th>Ciudad</th><th>Estado</th><th>Acciones</th>
+      </tr></thead>
+      <tbody>
+        ${data.map(p => `
+          <tr>
+            <td><strong>${p.nombre} ${p.apellido}</strong></td>
+            <td style="color:var(--clr-muted)">${p.email}</td>
+            <td>${p.ciudad || '—'}</td>
+            <td>${UI.badge(p.estado || 'activo')}</td>
+            <td>
+              <button class="btn btn--primary btn--sm"
+                      onclick="abrirSesiones(${p.id_paciente},'${p.nombre} ${p.apellido}')">
+                Ver sesiones
+              </button>
+            </td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+// ── Ver sesiones ─────────────────────────────────────────────
+
+async function abrirSesiones(id_paciente, nombre) {
+  pacienteActivoNombre = nombre;
+  document.getElementById('modal-sesiones').classList.add('open');
+  document.getElementById('sesiones-titulo').textContent   = nombre;
+  document.getElementById('sesiones-subtitulo').textContent = 'Historial de sesiones clínicas';
+  document.getElementById('sesiones-content').innerHTML    = UI.spinner();
+  document.getElementById('btn-nueva-sesion').style.display = 'inline-flex';
+
+  try {
+    const h = await API.historias.obtener(id_paciente);
+    historiaActivaId = h.id_historia;
+    await recargarSesiones();
+  } catch {
+    historiaActivaId = null;
+    document.getElementById('btn-nueva-sesion').style.display = 'none';
+    document.getElementById('sesiones-content').innerHTML =
+      UI.emptyState('Este paciente no tiene historia clínica — créala primero en "Historias clínicas"');
+  }
+}
+
+async function recargarSesiones() {
+  document.getElementById('sesiones-content').innerHTML = UI.spinner();
+  try {
+    sesionesActivas = await API.sesiones.listar(historiaActivaId);
+
+    if (!sesionesActivas.length) {
+      document.getElementById('sesiones-content').innerHTML =
+        UI.emptyState('Sin sesiones registradas — agrega la primera');
+      return;
+    }
+
+    document.getElementById('sesiones-content').innerHTML = `
+      <div style="display:grid;gap:.85rem;max-height:450px;overflow-y:auto;padding-right:.5rem">
+        ${sesionesActivas.map(s => `
+          <div style="background:var(--clr-bg);border:1px solid var(--clr-border);
+               border-radius:var(--radius-md);padding:1.25rem">
+
+            <!-- Header de la sesión -->
+            <div style="display:flex;justify-content:space-between;align-items:center;
+                 margin-bottom:.75rem;padding-bottom:.75rem;
+                 border-bottom:1px solid var(--clr-border)">
+              <div>
+                <strong style="font-size:.92rem">${UI.fechaCorta(s.fecha)}</strong>
+                <span style="font-size:.75rem;color:var(--clr-muted);margin-left:.75rem">
+                  Sesión #${s.id_sesion}
+                </span>
+              </div>
+              <div style="display:flex;gap:.4rem">
+                <button class="btn btn--outline btn--sm"
+                        onclick='abrirEditarSesion(${JSON.stringify(s)})'>
+                  ✏ Editar
+                </button>
+                <button class="btn btn--danger btn--sm"
+                        onclick="confirmarEliminarSesion(${s.id_sesion})">
+                  🗑
+                </button>
+              </div>
+            </div>
+
+            <!-- Contenido -->
+            <div style="display:grid;gap:.6rem">
+              <div>
+                <span style="font-size:.75rem;font-weight:500;text-transform:uppercase;
+                     letter-spacing:.06em;color:var(--clr-muted)">Evolución</span>
+                <p style="font-size:.88rem;margin-top:.3rem;line-height:1.6;
+                          color:var(--clr-text)">${s.evolucion}</p>
+              </div>
+              ${s.plan_tratamiento ? `
+              <div>
+                <span style="font-size:.75rem;font-weight:500;text-transform:uppercase;
+                     letter-spacing:.06em;color:var(--clr-muted)">Plan de tratamiento</span>
+                <p style="font-size:.88rem;margin-top:.3rem;line-height:1.6;
+                          color:var(--clr-text)">${s.plan_tratamiento}</p>
+              </div>` : ''}
+              ${s.observaciones ? `
+              <div>
+                <span style="font-size:.75rem;font-weight:500;text-transform:uppercase;
+                     letter-spacing:.06em;color:var(--clr-muted)">Observaciones</span>
+                <p style="font-size:.88rem;margin-top:.3rem;line-height:1.6;
+                          color:var(--clr-text)">${s.observaciones}</p>
+              </div>` : ''}
+            </div>
+          </div>`).join('')}
+      </div>`;
+  } catch(err) { Toast.error(err.message); }
+}
+
+// ── Nueva sesión ─────────────────────────────────────────────
+
+function abrirNuevaSesion() {
+  if (!historiaActivaId) {
+    Toast.error('El paciente no tiene historia clínica. Créala primero.');
+    return;
+  }
+  document.getElementById('ns-historia-id').value = historiaActivaId;
+  document.getElementById('ns-fecha').value        = new Date().toISOString().split('T')[0];
+  document.getElementById('ns-evolucion').value    = '';
+  document.getElementById('ns-plan').value         = '';
+  document.getElementById('ns-obs').value          = '';
+  document.getElementById('ns-error').textContent  = '';
+  document.getElementById('ns-cita-id').value      = '';
+  document.getElementById('modal-nueva-sesion').classList.add('open');
+}
+
+async function guardarNuevaSesion() {
+  const err      = document.getElementById('ns-error');
+  const evolucion = document.getElementById('ns-evolucion').value.trim();
+  const citaId   = document.getElementById('ns-cita-id').value;
+  err.textContent = '';
+
+  if (!evolucion) { err.textContent = 'La evolución es obligatoria'; return; }
+  if (!citaId)    { err.textContent = 'El ID de la cita es obligatorio'; return; }
+
+  const body = {
+    id_historia:      parseInt(document.getElementById('ns-historia-id').value),
+    id_cita:          parseInt(citaId),
+    fecha:            document.getElementById('ns-fecha').value,
+    evolucion,
+    plan_tratamiento: document.getElementById('ns-plan').value || null,
+    observaciones:    document.getElementById('ns-obs').value  || null,
+  };
+
+  try {
+    await API.sesiones.crear(body);
+    cerrarModal('modal-nueva-sesion');
+    Toast.success('Sesión registrada correctamente');
+    await recargarSesiones();
+  } catch(e) { err.textContent = e.message; }
+}
+
+// ── Editar sesión ────────────────────────────────────────────
+
+function abrirEditarSesion(s) {
+  document.getElementById('edit-sesion-id').value     = s.id_sesion;
+  document.getElementById('edit-evolucion').value     = s.evolucion || '';
+  document.getElementById('edit-plan').value          = s.plan_tratamiento || '';
+  document.getElementById('edit-obs').value           = s.observaciones || '';
+  document.getElementById('edit-sesion-error').textContent = '';
+  document.getElementById('editar-sesion-titulo').textContent =
+    `Editar sesión #${s.id_sesion} — ${UI.fechaCorta(s.fecha)}`;
+  document.getElementById('modal-editar-sesion').classList.add('open');
+}
+
+async function guardarEdicionSesion() {
+  const err = document.getElementById('edit-sesion-error');
+  const btn = document.getElementById('btn-guardar-edit-sesion');
+  err.textContent = '';
+
+  const id        = document.getElementById('edit-sesion-id').value;
+  const evolucion = document.getElementById('edit-evolucion').value.trim();
+
+  if (!evolucion) { err.textContent = 'La evolución es obligatoria'; return; }
+
+  btn.disabled    = true;
+  btn.textContent = 'Guardando...';
+
+  try {
+    await API.sesiones.actualizar(id, {
+      evolucion,
+      plan_tratamiento: document.getElementById('edit-plan').value || null,
+      observaciones:    document.getElementById('edit-obs').value  || null,
+    });
+    cerrarModal('modal-editar-sesion');
+    Toast.success('Sesión actualizada correctamente');
+    await recargarSesiones();
+  } catch(e) {
+    err.textContent = e.message;
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = 'Guardar cambios';
+  }
+}
+
+// ── Eliminar sesión ──────────────────────────────────────────
+
+function confirmarEliminarSesion(id_sesion) {
+  document.getElementById('eliminar-sesion-id').value = id_sesion;
+  document.getElementById('modal-confirmar-sesion').classList.add('open');
+}
+
+async function ejecutarEliminarSesion() {
+  const id = document.getElementById('eliminar-sesion-id').value;
+  try {
+    await API.sesiones.eliminar(id);
+    cerrarModal('modal-confirmar-sesion');
+    Toast.success('Sesión eliminada correctamente');
+    await recargarSesiones();
+  } catch(err) { Toast.error(err.message); }
+}
+
+function cerrarModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+load();
+</script>
+</body>
+</html>

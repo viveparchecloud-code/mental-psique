@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MentalPsique — Psicólogos</title>
+  <link rel="stylesheet" href="../css/global.css">
+</head>
+<body>
+<script src="../js/api.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+Auth.requireAuth();
+const main = renderLayout('Psicólogos');
+const user = Auth.getUser();
+let lista = [];
+
+async function load() {
+  main.innerHTML = `
+    <div class="page-header">
+      <div><h2>Psicólogos</h2><p>Equipo de profesionales de salud mental</p></div>
+      ${user.rol === 'admin' ? '<button class="btn btn--primary" onclick="abrirModalCrear()">+ Agregar profesional</button>' : ''}
+    </div>
+    <div id="grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem">${UI.spinner()}</div>
+
+    <!-- Modal Crear -->
+    <div class="modal-overlay" id="modal-crear">
+      <div class="modal" style="max-width:580px">
+        <div class="modal__header">
+          <h3 class="modal__title">Agregar profesional de salud</h3>
+          <button class="modal__close" onclick="cerrarModal('modal-crear')">✕</button>
+        </div>
+        <div style="display:grid;gap:1rem">
+          <p style="font-size:.82rem;padding:.75rem;background:var(--clr-indigo-lt);border-radius:var(--radius-sm);margin:0;color:var(--clr-muted)">
+            Se creará un usuario con rol <strong>psicólogo</strong> que podrá iniciar sesión con el email y contraseña ingresados.
+          </p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div class="form-group"><label>Nombre</label><input type="text" id="ps-nombre" placeholder="Nombre"></div>
+            <div class="form-group"><label>Apellido</label><input type="text" id="ps-apellido" placeholder="Apellido"></div>
+          </div>
+          <div class="form-group"><label>Correo electrónico</label><input type="email" id="ps-email" placeholder="correo@mentalpsique.com"></div>
+          <div class="form-group"><label>Contraseña temporal</label><input type="password" id="ps-password" placeholder="Mínimo 8 caracteres"></div>
+          <div class="form-group">
+            <label>Especialidad</label>
+            <select id="ps-especialidad">
+              <option value="">Seleccionar especialidad...</option>
+              <option>Psicología clínica y cognitivo-conductual</option>
+              <option>Psicología infantil y del desarrollo</option>
+              <option>Psicología de parejas y familia</option>
+              <option>Psicología de adicciones</option>
+              <option>Psicología sexual y de género</option>
+              <option>Psiquiatría general</option>
+              <option>Neuropsicología</option>
+              <option>Psicología organizacional</option>
+              <option>Otra especialidad</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Tarjeta profesional</label><input type="text" id="ps-tarjeta" placeholder="Ej: PSI-COL-12345"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div class="form-group"><label>Duración sesión (min)</label><input type="number" id="ps-duracion" value="60" min="30" max="120" step="15"></div>
+            <div class="form-group"><label>Precio sesión (COP)</label><input type="number" id="ps-precio" value="100000" min="0" step="1000"></div>
+          </div>
+          <div class="form-group"><label>Descripción / Biografía</label><textarea id="ps-bio" rows="3" placeholder="Experiencia y enfoque terapéutico..."></textarea></div>
+          <span class="form-error" id="ps-error" style="text-align:center"></span>
+        </div>
+        <div class="modal__footer">
+          <button class="btn btn--outline" onclick="cerrarModal('modal-crear')">Cancelar</button>
+          <button class="btn btn--primary" id="btn-guardar-ps" onclick="guardarPsicologo()">Crear profesional</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Editar -->
+    <div class="modal-overlay" id="modal-editar">
+      <div class="modal" style="max-width:580px">
+        <div class="modal__header">
+          <h3 class="modal__title" id="editar-titulo">Editar psicólogo</h3>
+          <button class="modal__close" onclick="cerrarModal('modal-editar')">✕</button>
+        </div>
+        <input type="hidden" id="edit-id">
+        <div style="display:grid;gap:1rem">
+          <div class="form-group">
+            <label>Especialidad</label>
+            <select id="edit-especialidad">
+              <option value="">Seleccionar...</option>
+              <option>Psicología clínica y cognitivo-conductual</option>
+              <option>Psicología infantil y del desarrollo</option>
+              <option>Psicología de parejas y familia</option>
+              <option>Psicología de adicciones</option>
+              <option>Psicología sexual y de género</option>
+              <option>Psiquiatría general</option>
+              <option>Neuropsicología</option>
+              <option>Psicología organizacional</option>
+              <option>Otra especialidad</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Tarjeta profesional</label><input type="text" id="edit-tarjeta"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div class="form-group"><label>Duración sesión (min)</label><input type="number" id="edit-duracion" min="30" max="120" step="15"></div>
+            <div class="form-group"><label>Precio sesión (COP)</label><input type="number" id="edit-precio" min="0" step="1000"></div>
+          </div>
+          <div class="form-group"><label>Descripción / Biografía</label><textarea id="edit-bio" rows="3"></textarea></div>
+          <span class="form-error" id="edit-error" style="text-align:center"></span>
+        </div>
+        <div class="modal__footer">
+          <button class="btn btn--outline" onclick="cerrarModal('modal-editar')">Cancelar</button>
+          <button class="btn btn--primary" id="btn-guardar-edit" onclick="guardarEdicion()">Guardar cambios</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Disponibilidad -->
+    <div class="modal-overlay" id="modal-disp">
+      <div class="modal">
+        <div class="modal__header">
+          <h3 class="modal__title" id="disp-nombre">Disponibilidad</h3>
+          <button class="modal__close" onclick="cerrarModal('modal-disp')">✕</button>
+        </div>
+        <div id="disp-content">${UI.spinner()}</div>
+        <div class="modal__footer"><button class="btn btn--outline" onclick="cerrarModal('modal-disp')">Cerrar</button></div>
+      </div>
+    </div>
+
+    <!-- Modal Confirmar -->
+    <div class="modal-overlay" id="modal-confirmar">
+      <div class="modal" style="max-width:420px">
+        <div class="modal__header">
+          <h3 class="modal__title" id="confirmar-titulo">Confirmar acción</h3>
+          <button class="modal__close" onclick="cerrarModal('modal-confirmar')">✕</button>
+        </div>
+        <p id="confirmar-texto" style="font-size:.9rem;color:var(--clr-muted);margin:.5rem 0 1rem"></p>
+        <input type="hidden" id="confirmar-id">
+        <input type="hidden" id="confirmar-accion">
+        <div class="modal__footer">
+          <button class="btn btn--outline" onclick="cerrarModal('modal-confirmar')">Cancelar</button>
+          <button id="btn-confirmar" class="btn btn--danger" onclick="ejecutarAccion()">Confirmar</button>
+        </div>
+      </div>
+    </div>
+  `;
+  try {
+    lista = await API.psicologos.listar();
+    renderGrid(lista);
+  } catch(err) { Toast.error(err.message); }
+}
+
+function renderGrid(data) {
+  if (!data.length) { document.getElementById('grid').innerHTML = UI.emptyState('No hay psicólogos registrados'); return; }
+  document.getElementById('grid').innerHTML = data.map(p => {
+    const inactivo = p.activo === 0;
+    return `
+    <div class="stat-card" style="opacity:${inactivo?'0.6':'1'}">
+      <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem">
+        <div class="navbar__avatar" style="width:44px;height:44px;font-size:1rem;flex-shrink:0;
+             background:${inactivo?'var(--clr-border)':'var(--clr-sage-lt)'};
+             color:${inactivo?'var(--clr-muted)':'var(--clr-sage-dk)'}">
+          ${(p.nombre?.[0]||'P').toUpperCase()}
+        </div>
+        <div style="flex:1">
+          <div style="font-weight:500;font-size:.95rem">${p.nombre} ${p.apellido}</div>
+          <div style="font-size:.78rem;color:var(--clr-sage-dk)">${p.especialidad}</div>
+        </div>
+        ${inactivo
+          ? '<span class="badge badge--cancelada">● Inactivo</span>'
+          : '<span class="badge badge--activo">● Activo</span>'}
+      </div>
+      <div style="font-size:.82rem;color:var(--clr-muted);margin-bottom:.75rem;line-height:1.5">${p.descripcion_bio||'Profesional de salud mental certificado.'}</div>
+      <div style="font-size:.82rem;color:var(--clr-muted);margin-bottom:1rem">📧 ${p.email||'—'}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding-top:.75rem;border-top:1px solid var(--clr-border);gap:.5rem;flex-wrap:wrap">
+        <span style="font-size:.82rem;color:var(--clr-muted)"><strong>${p.duracion_sesion} min</strong> · <strong>$${Number(p.precio_sesion||0).toLocaleString('es-CO')}</strong></span>
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+          <button class="btn btn--outline btn--sm" onclick="verDisponibilidad(${p.id_psicologo},'${p.nombre} ${p.apellido}')">Horarios</button>
+          ${user.rol==='admin' ? `
+            <button class="btn btn--outline btn--sm" onclick='abrirEditar(${JSON.stringify(p)})'>Editar</button>
+            ${inactivo
+              ? `<button class="btn btn--sm" style="background:var(--clr-success);color:#fff"
+                    onclick="confirmarAccion(${p.id_psicologo},'activar','${p.nombre} ${p.apellido}')">
+                    ✓ Activar
+                 </button>`
+              : `<button class="btn btn--sm" style="background:#F59E0B;color:#fff"
+                    onclick="confirmarAccion(${p.id_psicologo},'desactivar','${p.nombre} ${p.apellido}')">
+                    ⏸ Desactivar
+                 </button>`}
+            <button class="btn btn--danger btn--sm"
+                    onclick="confirmarAccion(${p.id_psicologo},'eliminar','${p.nombre} ${p.apellido}')">
+              🗑 Eliminar
+            </button>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function abrirModalCrear() {
+  ['ps-nombre','ps-apellido','ps-email','ps-password','ps-tarjeta','ps-bio'].forEach(id=>{document.getElementById(id).value='';});
+  document.getElementById('ps-especialidad').value='';
+  document.getElementById('ps-duracion').value='60';
+  document.getElementById('ps-precio').value='100000';
+  document.getElementById('ps-error').textContent='';
+  document.getElementById('modal-crear').classList.add('open');
+}
+
+async function guardarPsicologo() {
+  const err=document.getElementById('ps-error'), btn=document.getElementById('btn-guardar-ps');
+  err.textContent='';
+  const nombre=document.getElementById('ps-nombre').value.trim();
+  const apellido=document.getElementById('ps-apellido').value.trim();
+  const email=document.getElementById('ps-email').value.trim();
+  const password=document.getElementById('ps-password').value;
+  const especialidad=document.getElementById('ps-especialidad').value;
+  const tarjeta=document.getElementById('ps-tarjeta').value.trim();
+  const duracion=parseInt(document.getElementById('ps-duracion').value);
+  const precio=parseFloat(document.getElementById('ps-precio').value);
+  const bio=document.getElementById('ps-bio').value.trim();
+  if(!nombre||!apellido){err.textContent='Nombre y apellido obligatorios';return;}
+  if(!email){err.textContent='El correo es obligatorio';return;}
+  if(password.length<8){err.textContent='Contraseña mínimo 8 caracteres';return;}
+  if(!especialidad){err.textContent='Selecciona una especialidad';return;}
+  if(!tarjeta){err.textContent='La tarjeta profesional es obligatoria';return;}
+  btn.disabled=true; btn.textContent='Creando...';
+  try {
+    await API.psicologos.crear({nombre,apellido,email,password,especialidad,numero_tarjeta:tarjeta,duracion_sesion:duracion,precio_sesion:precio,descripcion_bio:bio||null});
+    cerrarModal('modal-crear');
+    Toast.success(`Psicólogo ${nombre} ${apellido} creado correctamente`);
+    lista=await API.psicologos.listar(); renderGrid(lista);
+  } catch(e){err.textContent=e.message;}
+  finally{btn.disabled=false;btn.textContent='Crear profesional';}
+}
+
+function abrirEditar(p) {
+  document.getElementById('edit-id').value=p.id_psicologo;
+  document.getElementById('edit-especialidad').value=p.especialidad||'';
+  document.getElementById('edit-tarjeta').value=p.numero_tarjeta||'';
+  document.getElementById('edit-duracion').value=p.duracion_sesion||60;
+  document.getElementById('edit-precio').value=p.precio_sesion||0;
+  document.getElementById('edit-bio').value=p.descripcion_bio||'';
+  document.getElementById('edit-error').textContent='';
+  document.getElementById('editar-titulo').textContent=`Editar — ${p.nombre} ${p.apellido}`;
+  document.getElementById('modal-editar').classList.add('open');
+}
+
+async function guardarEdicion() {
+  const err=document.getElementById('edit-error'), btn=document.getElementById('btn-guardar-edit');
+  err.textContent='';
+  const id=document.getElementById('edit-id').value;
+  const especialidad=document.getElementById('edit-especialidad').value;
+  const tarjeta=document.getElementById('edit-tarjeta').value.trim();
+  const duracion=parseInt(document.getElementById('edit-duracion').value);
+  const precio=parseFloat(document.getElementById('edit-precio').value);
+  const bio=document.getElementById('edit-bio').value.trim();
+  if(!especialidad){err.textContent='La especialidad es obligatoria';return;}
+  if(!tarjeta){err.textContent='La tarjeta profesional es obligatoria';return;}
+  btn.disabled=true; btn.textContent='Guardando...';
+  try {
+    await API.psicologos.actualizar(id,{especialidad,numero_tarjeta:tarjeta,duracion_sesion:duracion,precio_sesion:precio,descripcion_bio:bio||null});
+    cerrarModal('modal-editar');
+    Toast.success('Psicólogo actualizado correctamente');
+    lista=await API.psicologos.listar(); renderGrid(lista);
+  } catch(e){err.textContent=e.message;}
+  finally{btn.disabled=false;btn.textContent='Guardar cambios';}
+}
+
+async function verDisponibilidad(id,nombre) {
+  document.getElementById('modal-disp').classList.add('open');
+  document.getElementById('disp-nombre').textContent=nombre;
+  document.getElementById('disp-content').innerHTML=UI.spinner();
+  const dias=['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+  try {
+    const items=await API.psicologos.disponibilidad(id);
+    if(!items.length){document.getElementById('disp-content').innerHTML=UI.emptyState('Sin horarios configurados');return;}
+    document.getElementById('disp-content').innerHTML='<div style="display:grid;gap:.6rem">'+items.map(d=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:.75rem 1rem;background:var(--clr-sage-lt);border-radius:var(--radius-sm)">
+        <span style="font-weight:500">${dias[d.dia_semana]}</span>
+        <span style="color:var(--clr-sage-dk)">${d.hora_inicio} — ${d.hora_fin}</span>
+      </div>`).join('')+'</div>';
+  } catch(e){Toast.error(e.message);}
+}
+
+function confirmarAccion(id, accion, nombre) {
+  document.getElementById('confirmar-id').value=id;
+  document.getElementById('confirmar-accion').value=accion;
+  const cfg = {
+    activar:    { titulo:'Activar psicólogo',    texto:`¿Deseas reactivar la cuenta de ${nombre}?`,                                             btnTxt:'✓ Activar',     btnClass:'btn btn--primary' },
+    desactivar: { titulo:'Desactivar psicólogo', texto:`¿Seguro que deseas desactivar a ${nombre}? No podrá iniciar sesión.`,                    btnTxt:'⏸ Desactivar', btnClass:'btn btn--sm' },
+    eliminar:   { titulo:'Eliminar psicólogo',   texto:`⚠ Esta acción es irreversible. Se eliminará a ${nombre} y todos sus datos del sistema.`, btnTxt:'🗑 Eliminar',   btnClass:'btn btn--danger' },
+  };
+  const c=cfg[accion];
+  document.getElementById('confirmar-titulo').textContent=c.titulo;
+  document.getElementById('confirmar-texto').textContent=c.texto;
+  const btn=document.getElementById('btn-confirmar');
+  btn.textContent=c.btnTxt; btn.className=c.btnClass;
+  document.getElementById('modal-confirmar').classList.add('open');
+}
+
+async function ejecutarAccion() {
+  const id=document.getElementById('confirmar-id').value;
+  const accion=document.getElementById('confirmar-accion').value;
+  try {
+    if(accion==='activar'){await API.psicologos.activar(id);Toast.success('Psicólogo activado');}
+    else if(accion==='desactivar'){await API.psicologos.desactivar(id);Toast.success('Psicólogo desactivado');}
+    else if(accion==='eliminar'){await API.psicologos.eliminar(id);Toast.success('Psicólogo eliminado');}
+    cerrarModal('modal-confirmar');
+    lista=await API.psicologos.listar(); renderGrid(lista);
+  } catch(err){Toast.error(err.message);}
+}
+
+function cerrarModal(id){document.getElementById(id).classList.remove('open');}
+load();
+</script>
+</body>
+</html>

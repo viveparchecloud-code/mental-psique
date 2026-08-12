@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MentalPsique — Salud Mental Profesional</title>
+  <link rel="stylesheet" href="Inicio.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- TEMA 2: Semantic Markup — <header>, <nav>, <main>, <section>, <article>, <footer> -->
+  <header>
+    <nav class="nav-container" role="navigation" aria-label="Navegación principal">
+      <div class="logo">
+        <!-- TEMA 2: div como contenedor de logo -->
+        <img src="img/logo.png" alt="Logo MentalPsique" onerror="this.style.display='none'">
+        <span class="logo-text">MentalPsique</span>
+        <!-- TEMA 2: <span> para texto con estilo especial -->
+      </div>
+
+      <div class="nav-links" role="menubar">
+        <a href="#inicio"      class="active"   role="menuitem">Inicio</a>
+        <a href="#servicios"                    role="menuitem">Terapias</a>
+        <a href="#contacto"                     role="menuitem">Agendar Citas</a>
+        <!-- Botones conectados al sistema -->
+        <button class="iniciar-sesion" onclick="window.location.href='pages/login.html'">
+          Iniciar Sesión
+        </button>
+        <button class="registrarse" onclick="window.location.href='pages/registro.html'">
+          Registrarse
+        </button>
+        <button class="search-btn" aria-label="Buscar" onclick="toggleSearch()">
+          <i class="fas fa-search" aria-hidden="true"></i>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <main id="inicio">
+
+    <!-- ═══════════════════════════════
+         SECCIÓN HERO
+    ═══════════════════════════════════ -->
+    <section class="hero" aria-labelledby="hero-heading">
+      <!-- Glows decorativos (posicionamiento absoluto — TEMA 10) -->
+      <div class="hero-glow-1" aria-hidden="true"></div>
+      <div class="hero-glow-2" aria-hidden="true"></div>
+
+      <div class="hero-content">
+        <!-- TEMA 2: h1 con spans para colores — TEMA 3: Styling text -->
+        <h1 id="hero-heading">
+          <span class="line1">Las <span class="highlight-purple">Emociones Inexpresadas</span> Nunca</span>
+          <span class="line2"><span class="highlight-cyan">Mueren</span></span>
+          <span class="line3">Son <span class="highlight-pink">Enterradas Vivas</span> y <span class="highlight-purple">Salen</span> Más Tarde</span>
+          <span class="line4">De <span class="highlight-cyan">Peores Formas</span></span>
+        </h1>
+        <!-- TEMA 2: <div> para agrupar la firma -->
+        <div class="signature">— Sigmund Freud</div>
+
+        <!-- CTA conectados al sistema — TEMA 12: Flexbox -->
+        <div class="hero-cta">
+          <a href="pages/registro.html" class="btn-hero-primary">
+            Comenzar ahora
+          </a>
+          <a href="#servicios" class="btn-hero-secondary">
+            Ver servicios
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════
+         SECCIÓN SERVICIOS
+    ═══════════════════════════════════ -->
+    <section class="servicios" id="servicios" aria-labelledby="servicios-heading">
+      <h2 id="servicios-heading">¡Nuestros Servicios!</h2>
+      <p>Mira todos los servicios que ofrece MentalPsique</p>
+
+      <!-- TEMA 14: CSS Grid -->
+      <div class="servicios-grid">
+
+        <!-- TEMA 2: article para contenido independiente -->
+        <article class="servicio-item" tabindex="0" role="button"
+                 onclick="window.location.href='pages/login.html'"
+                 onkeydown="if(event.key==='Enter') this.click()">
+          <div class="servicio-icono icon-psicologia">
+            <img src="img/psicologia.png" alt="" onerror="this.parentElement.innerHTML='🧠'">
+          </div>
+          <h3>PSICOLOGÍA</h3>
+        </article>
+
+        <article class="servicio-item" tabindex="0" role="button"
+                 onclick="window.location.href='pages/login.html'"
+                 onkeydown="if(event.key==='Enter') this.click()">
+          <div class="servicio-icono icon-infantil">
+            <img src="img/infantil.png" alt="" onerror="this.parentElement.innerHTML='🧒'">
+          </div>
+          <h3>INFANTIL</h3>
+        </article>
+
+        <article class="servicio-item" tabindex="0" role="button"
+                 onclick="window.location.href='pages/login.html'"
+                 onkeydown="if(event.key==='Enter') this.click()">
+          <div class="servicio-icono icon-parejas">
+            <img src="img/parejas.png" alt="" onerror="this.parentElement.innerHTML='💑'">
+          </div>
+          <h3>PAREJAS</h3>
+        </article>
+
+        <article class="servicio-item" tabindex="0" role="button"
+                 onclick="window.location.href='pages/login.html'"
+                 onkeydown="if(event.key==='Enter') this.click()">
+          <div class="servicio-icono icon-drogas">
+            <img src="img/drogas.png" alt="" onerror="this.parentElement.innerHTML='🩺'">
+          </div>
+          <h3>DROGAS</h3>
+        </article>
+
+        <article class="servicio-item" tabindex="0" role="button"
+                 onclick="window.location.href='pages/login.html'"
+                 onkeydown="if(event.key==='Enter') this.click()">
+          <div class="servicio-icono icon-sexologia">
+            <img src="img/sexologia.png" alt="" onerror="this.parentElement.innerHTML='💚'">
+          </div>
+          <h3>SEXOLOGÍA</h3>
+        </article>
+
+        <article class="servicio-item" tabindex="0" role="button"
+                 onclick="window.location.href='pages/login.html'"
+                 onkeydown="if(event.key==='Enter') this.click()">
+          <div class="servicio-icono icon-psiquiatria">
+            <img src="img/psiquiatria.png" alt="" onerror="this.parentElement.innerHTML='⚕️'">
+          </div>
+          <h3>PSIQUIATRÍA</h3>
+        </article>
+
+      </div>
+
+      <button class="saber-mas" onclick="window.location.href='pages/login.html'">
+        SABER MÁS
+      </button>
+    </section>
+
+    <!-- ═══════════════════════════════
+         SECCIÓN TESTIMONIOS
+    ═══════════════════════════════════ -->
+    <section class="testimonios" aria-labelledby="testimonios-heading">
+      <h2 id="testimonios-heading">TESTIMONIOS</h2>
+      <p>LOS PACIENTES DICEN</p>
+
+      <div class="rating" aria-label="Calificación 5 de 5 estrellas">
+        <span>+200 RESEÑAS</span>
+        <div class="stars" role="img" aria-label="5 estrellas">
+          <i class="fas fa-star" aria-hidden="true"></i>
+          <i class="fas fa-star" aria-hidden="true"></i>
+          <i class="fas fa-star" aria-hidden="true"></i>
+          <i class="fas fa-star" aria-hidden="true"></i>
+          <i class="fas fa-star" aria-hidden="true"></i>
+        </div>
+      </div>
+
+      <!-- TEMA 12: Flexbox para el slider -->
+      <div class="testimonios-slider" role="region" aria-label="Testimonios de pacientes" aria-live="polite">
+        <div class="slider-container" id="slider-container">
+          <!-- Los testimonios se agregan con JS (Inicio.js) -->
+        </div>
+
+        <div class="slider-controls">
+          <button class="prev" aria-label="Testimonio anterior" onclick="prevSlide()">
+            <i class="fas fa-chevron-left" aria-hidden="true"></i>
+          </button>
+          <div class="dots" id="dots-container" role="tablist" aria-label="Navegación de testimonios">
+            <!-- Los dots se generan dinámicamente -->
+          </div>
+          <button class="next" aria-label="Siguiente testimonio" onclick="nextSlide()">
+            <i class="fas fa-chevron-right" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════
+         SECCIÓN CONTACTO
+    ═══════════════════════════════════ -->
+    <section class="contacto" id="contacto" aria-labelledby="contacto-heading">
+      <div class="contacto-inner">
+        <h2 id="contacto-heading">Formulario De Contacto</h2>
+
+        <!-- TEMA 2: párrafos semánticos para info de contacto -->
+        <p class="contacto-info">También puedes contactarnos en:</p>
+        <p class="contacto-email">
+          <i class="fas fa-envelope" aria-hidden="true"></i>
+          contacto@mentalpsique.com
+        </p>
+        <p class="contacto-phone">
+          <i class="fas fa-phone" aria-hidden="true"></i>
+          +57 300 000 0000
+        </p>
+
+        <!-- TEMA 4: Forms completo -->
+        <form class="contacto-form" id="form-contacto" novalidate
+              aria-label="Formulario de contacto">
+
+          <!-- TEMA 4: input con label semántico -->
+          <div class="form-group">
+            <label for="contacto-nombre" class="sr-only">Nombre</label>
+            <input type="text"  id="contacto-nombre"  name="nombre"
+                   placeholder="Nombre"          required autocomplete="given-name">
+          </div>
+
+          <div class="form-group">
+            <label for="contacto-apellido" class="sr-only">Apellidos</label>
+            <input type="text"  id="contacto-apellido" name="apellido"
+                   placeholder="Apellidos"        required autocomplete="family-name">
+          </div>
+
+          <div class="form-group">
+            <label for="contacto-email" class="sr-only">Correo electrónico</label>
+            <input type="email" id="contacto-email"    name="email"
+                   placeholder="Correo Electrónico" required autocomplete="email">
+          </div>
+
+          <div class="form-group">
+            <label for="contacto-mensaje" class="sr-only">Mensaje</label>
+            <textarea id="contacto-mensaje" name="mensaje"
+                      placeholder="Tu Mensaje (Lo que quieras)" required
+                      rows="4"></textarea>
+          </div>
+
+          <div class="form-buttons">
+            <button type="submit" class="btn-enviar">
+              <i class="fas fa-paper-plane" aria-hidden="true"></i>
+              Enviar
+            </button>
+            <button type="button" class="btn-agendar"
+                    onclick="window.location.href='pages/login.html'">
+              <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+              Agendar Cita
+            </button>
+          </div>
+
+          <!-- Mensaje de respuesta del formulario -->
+          <div id="form-msg" role="alert" aria-live="polite"
+               style="display:none;padding:.75rem;border-radius:8px;font-size:.88rem;margin-top:.5rem">
+          </div>
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- TEMA 2: <footer> elemento semántico -->
+  <footer class="footer" role="contentinfo">
+    <div class="footer-content">
+
+      <div class="footer-logo">
+        <img src="img/logo.png" alt="" onerror="this.style.display='none'">
+        <h3>MentalPsique</h3>
+        <p style="font-size:.82rem;color:var(--color-muted);max-width:200px;margin-top:.5rem">
+          Salud mental accesible y profesional para todos.
+        </p>
+      </div>
+
+      <!-- TEMA 14: Flexbox para los links del footer -->
+      <div class="footer-links">
+        <div class="footer-section">
+          <h4>Menú</h4>
+          <!-- TEMA 2: <ul> lista semántica -->
+          <ul>
+            <li><a href="#inicio">Inicio</a></li>
+            <li><a href="#servicios">Terapias</a></li>
+            <li><a href="#servicios">Servicios</a></li>
+            <li><a href="#contacto">Contacto</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h4>Servicios</h4>
+          <ul>
+            <li><a href="pages/login.html">Psicología</a></li>
+            <li><a href="pages/login.html">Infantil</a></li>
+            <li><a href="pages/login.html">Parejas</a></li>
+            <li><a href="pages/login.html">Drogas</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h4>Contacto</h4>
+          <ul>
+            <li>contacto@mentalpsique.com</li>
+            <li>+57 300 000 0000</li>
+            <li>Medellín, Colombia</li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h4>Síguenos</h4>
+          <div class="social-links">
+            <a href="#" class="social-icon" aria-label="Facebook">
+              <i class="fab fa-facebook-f" aria-hidden="true"></i>
+            </a>
+            <a href="#" class="social-icon" aria-label="Instagram">
+              <i class="fab fa-instagram" aria-hidden="true"></i>
+            </a>
+            <a href="#" class="social-icon" aria-label="Twitter">
+              <i class="fab fa-twitter" aria-hidden="true"></i>
+            </a>
+            <a href="#" class="social-icon" aria-label="LinkedIn">
+              <i class="fab fa-linkedin-in" aria-hidden="true"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2025 MentalPsique. Todos los derechos reservados.</p>
+    </div>
+  </footer>
+
+  <!-- Screen reader only class — accesibilidad -->
+  <style>
+    .sr-only {
+      position: absolute;
+      width: 1px; height: 1px;
+      padding: 0; margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
+
+  <script src="Inicio.js"></script>
+</body>
+</html>

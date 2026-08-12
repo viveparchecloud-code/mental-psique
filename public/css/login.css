@@ -1,0 +1,146 @@
+/* ── Paleta azul · consultorio psicológico (regla 60-30-10) ─── */
+:root {
+  /* 60% — dominante / neutro (fondos) */
+  --clr-bg:        #f3f6fa;   /* fondo general, lado del formulario */
+  --clr-surface:   #ffffff;   /* superficies/tarjetas */
+
+  /* 30% — secundario (estructura y textos) */
+  --clr-blue-dk:   #294866;   /* panel visual, azul profundo y sereno */
+  --clr-text:      #1f3a52;   /* texto principal */
+  --clr-muted:     #5f778f;   /* texto secundario / apoyo */
+  --clr-border:    #dce5ee;   /* bordes y divisores */
+
+  /* 10% — acento (CTA y notificaciones críticas, ¡úsalo con moderación!) */
+  --clr-accent:    #3d7fd6;   /* azul vivo para llamadas a la acción */
+  --clr-accent-dk: #2f68b5;   /* hover del acento */
+}
+
+/* ── Login page ─────────────────────────────────────────────── */
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.login-visual {
+  background: var(--clr-blue-dk);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 3rem;
+  position: relative;
+  overflow: hidden;
+}
+.login-visual::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 40px,
+    rgba(255,255,255,.03) 40px,
+    rgba(255,255,255,.03) 80px
+  );
+}
+.login-visual__quote {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 300;
+  font-style: italic;
+  color: rgba(255,255,255,.9);
+  line-height: 1.35;
+  max-width: 420px;
+  margin-bottom: 1rem;
+  position: relative;
+}
+.login-visual__author {
+  font-size: .8rem;
+  color: rgba(255,255,255,.5);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  position: relative;
+}
+.login-visual__brand {
+  position: absolute;
+  top: 3rem; left: 3rem;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  color: #fff;
+  font-weight: 300;
+}
+.login-visual__brand span { font-style: italic; opacity: .7; }
+
+.login-form-side {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: var(--clr-bg);
+}
+.login-box {
+  width: 100%;
+  max-width: 400px;
+}
+.login-box__title {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 400;
+  margin-bottom: .5rem;
+  color: var(--clr-text);
+}
+.login-box__sub {
+  font-size: .88rem;
+  color: var(--clr-muted);
+  margin-bottom: 2rem;
+}
+.login-box .form-grid { gap: 1rem; }
+
+/* CTA principal — único elemento con el color de acento (10%) */
+.login-box .btn--primary {
+  width: 100%;
+  justify-content: center;
+  padding: .75rem;
+  font-size: .95rem;
+  margin-top: .5rem;
+  background: var(--clr-accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  transition: background .18s ease;
+}
+.login-box .btn--primary:hover {
+  background: var(--clr-accent-dk);
+}
+
+.login-divider {
+  text-align: center;
+  font-size: .8rem;
+  color: var(--clr-muted);
+  margin: 1.25rem 0;
+  position: relative;
+}
+.login-divider::before, .login-divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 40%;
+  height: 1px;
+  background: var(--clr-border);
+}
+.login-divider::before { left: 0; }
+.login-divider::after  { right: 0; }
+.login-register-link {
+  text-align: center;
+  font-size: .85rem;
+  color: var(--clr-muted);
+  margin-top: 1.25rem;
+}
+.login-register-link a {
+  color: var(--clr-accent);
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .login-page { grid-template-columns: 1fr; }
+  .login-visual { display: none; }
+}
